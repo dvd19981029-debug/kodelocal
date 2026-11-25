@@ -217,8 +217,8 @@ export default function CheckoutPage() {
     }
   }, [cart, subtotal]);
 
-  // Método de pago: Tarjeta de Crédito/Débito o Transferencia Bancaria
-  const [metodoPago, setMetodoPago] = useState<'CARD' | 'TRANSFER'>('CARD');
+  // Método de pago: Tarjeta de Crédito/Débito, Transferencia Bancaria o Pago al retirar en sucursal (CASH)
+  const [metodoPago, setMetodoPago] = useState<'CARD' | 'TRANSFER' | 'CASH'>('CARD');
 
   // Estados de proceso
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -827,13 +827,14 @@ export default function CheckoutPage() {
     }
   };
 
-  // Pantalla de Pedido Confirmado / Pendiente de Transferencia
+  // Pantalla de Pedido Confirmado / Pendiente de Transferencia o Pago en Sucursal
   if (completedOrder) {
     const isTransfer = completedOrder.paymentMethod === 'TRANSFER';
+    const isPayAtStore = completedOrder.paymentMethod === 'CASH';
 
     const whatsappCardMessage = encodeURIComponent(
       `👋 ¡Hola Aromaniak!\n\n` +
-        `Acabo de realizar mi pedido con *Tarjeta*:\n\n` +
+        `Acabo de realizar mi pedido (${isPayAtStore ? '*Pago al retirar en sucursal*' : '*Tarjeta*'}):\n\n` +
         `📦 *Orden:* #${completedOrder.orderNumber}\n` +
         `👤 *Cliente:* ${completedOrder.cliente.nombre}\n` +
         `📱 *Teléfono:* ${completedOrder.cliente.telefono}\n` +
@@ -842,7 +843,7 @@ export default function CheckoutPage() {
         `🛍️ *Productos:*\n` +
         completedOrder.items.map((it) => `• ${it.quantity}x ${it.name} - $${it.total.toFixed(2)}`).join('\n') +
         `\n\n*Total:* $${completedOrder.total.toFixed(2)}\n\n` +
-        `¡Quedo atento a la entrega!`
+        `¡Quedo atento para pasar a retirar!`
     );
 
     return (
@@ -878,6 +879,11 @@ export default function CheckoutPage() {
                     <Clock className="w-3.5 h-3.5 text-amber-700" />
                     <span>Pendiente de verificación de transferencia</span>
                   </>
+                ) : isPayAtStore ? (
+                  <>
+                    <Store className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Pedido confirmado • Pago al retirar en sucursal</span>
+                  </>
                 ) : (
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
@@ -903,6 +909,11 @@ export default function CheckoutPage() {
                   </strong>{' '}
                   a cualquiera de nuestras cuentas corrientes y envía tu comprobante por{' '}
                   <strong className="text-slate-950">WhatsApp (6043-7496)</strong> o súbelo directamente aquí.
+                </>
+              ) : isPayAtStore ? (
+                <>
+                  Gracias, <strong className="text-slate-950">{completedOrder.cliente.nombre}</strong>. Tu pedido ya entró a preparación en bodega y pagarás{' '}
+                  <strong className="text-indigo-700 font-extrabold">${completedOrder.total.toFixed(2)}</strong> en caja al retirarlo en nuestra sucursal (C.C. El Rosal).
                 </>
               ) : (
                 <>
@@ -956,7 +967,11 @@ export default function CheckoutPage() {
             <div className="flex justify-between gap-4 text-slate-800">
               <span className="font-semibold">Forma de pago:</span>
               <span className="font-bold text-slate-950">
-                {isTransfer ? 'Transferencia bancaria' : 'Tarjeta de crédito / débito'}
+                {isTransfer
+                  ? 'Transferencia bancaria'
+                  : isPayAtStore
+                  ? 'Pago al retirar en sucursal (Efectivo o Tarjeta)'
+                  : 'Tarjeta de crédito / débito'}
               </span>
             </div>
             <div className="flex justify-between text-slate-950 font-extrabold pt-2 border-t border-slate-200 text-sm">
@@ -1215,7 +1230,12 @@ export default function CheckoutPage() {
                       type="button"
                       role="radio"
                       aria-checked={metodoEntrega === 'ENVIO'}
-                      onClick={() => setMetodoEntrega('ENVIO')}
+                      onClick={() => {
+                        setMetodoEntrega('ENVIO');
+                        if (metodoPago === 'CASH') {
+                          setMetodoPago('CARD');
+                        }
+                      }}
                       className={`p-4 rounded-xl text-left flex flex-col justify-between gap-2 transition-colors cursor-pointer ${
                         metodoEntrega === 'ENVIO'
                           ? 'border-2 border-indigo-600 bg-indigo-50/45'
@@ -1642,7 +1662,13 @@ export default function CheckoutPage() {
               </div>
 
               <div className="p-5 sm:p-6 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Forma de pago">
+                <div
+                  className={`grid grid-cols-1 ${
+                    metodoEntrega === 'RETIRO' ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
+                  } gap-3`}
+                  role="radiogroup"
+                  aria-label="Forma de pago"
+                >
                   {/* Opción: Tarjeta */}
                   <button
                     type="button"
@@ -1738,6 +1764,56 @@ export default function CheckoutPage() {
                       Envía tu comprobante al <strong className="font-bold text-slate-950">6043-7496</strong> o súbelo al confirmar tu orden.
                     </p>
                   </button>
+
+                  {/* Opción 3 (solo en Retiro en Sucursal): Pagar al retirar en sucursal */}
+                  {metodoEntrega === 'RETIRO' && (
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={metodoPago === 'CASH'}
+                      onClick={() => {
+                        setMetodoPago('CASH');
+                        trackMetaAddPaymentInfo(cart, totalConEnvio, 'CASH');
+                      }}
+                      className={`p-4 rounded-xl text-left flex flex-col justify-between gap-2.5 transition-colors cursor-pointer ${
+                        metodoPago === 'CASH'
+                          ? 'border-2 border-indigo-600 bg-indigo-50/45'
+                          : 'border border-slate-300 bg-white hover:border-slate-400'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 w-full">
+                        <div className="flex items-center gap-2.5">
+                          <Store
+                            className={`w-4 h-4 shrink-0 ${
+                              metodoPago === 'CASH' ? 'text-indigo-700' : 'text-slate-800'
+                            }`}
+                          />
+                          <div>
+                            <span className="font-extrabold text-slate-950 text-sm block leading-tight">
+                              Pagar en sucursal
+                            </span>
+                            <span className="text-xs font-bold text-emerald-700">
+                              Efectivo o tarjeta al retirar
+                            </span>
+                          </div>
+                        </div>
+                        <span
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
+                            metodoPago === 'CASH'
+                              ? 'border-indigo-600 bg-indigo-600'
+                              : 'border-slate-400 bg-white'
+                          }`}
+                        >
+                          {metodoPago === 'CASH' && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                          )}
+                        </span>
+                      </div>
+                      <p className="text-xs font-medium text-slate-800 leading-relaxed">
+                        Dejamos tu pedido listo en <strong className="font-bold text-slate-950">C.C. El Rosal</strong> y pagas en caja al recogerlo.
+                      </p>
+                    </button>
+                  )}
                 </div>
 
                 {metodoPago === 'CARD' ? (
@@ -1745,6 +1821,13 @@ export default function CheckoutPage() {
                     <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                     <p>
                       Serás redirigido a la pasarela oficial de <strong className="font-bold text-slate-950">Wompi</strong> (propiedad de <strong className="font-bold text-slate-950">Bancoagrícola</strong>). Aromaniak no almacena ni tiene acceso a los datos de tu tarjeta.
+                    </p>
+                  </div>
+                ) : metodoPago === 'CASH' ? (
+                  <div className="flex items-start gap-2.5 pt-3 border-t border-slate-200 text-xs text-slate-800 font-medium leading-relaxed">
+                    <Store className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                    <p>
+                      Prepararemos tu pedido de inmediato en nuestra sucursal (<strong className="font-bold text-slate-950">Centro Comercial El Rosal, San Salvador</strong>) y podrás pagarlo en efectivo o con tarjeta directamente en caja al retirarlo.
                     </p>
                   </div>
                 ) : (
@@ -2369,6 +2452,8 @@ export default function CheckoutPage() {
                       <span>
                         {metodoPago === 'CARD'
                           ? `Pagar con tarjeta • $${totalConEnvio.toFixed(2)}`
+                          : metodoPago === 'CASH'
+                          ? `Confirmar para pagar en sucursal • $${totalConEnvio.toFixed(2)}`
                           : `Confirmar pedido • $${totalConEnvio.toFixed(2)}`}
                       </span>
                     </>
@@ -2378,6 +2463,8 @@ export default function CheckoutPage() {
                 <p className="text-xs font-semibold text-slate-700 text-center leading-snug">
                   {metodoPago === 'CARD'
                     ? 'Conexión cifrada 3D Secure procesada por Wompi • Bancoagrícola'
+                    : metodoPago === 'CASH'
+                    ? 'Tu pedido pasará directo a preparación en sucursal y pagarás al retirarlo'
                     : 'Tu pedido quedará reservado al confirmar para que envíes tu comprobante'}
                 </p>
               </div>

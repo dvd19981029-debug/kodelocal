@@ -81,7 +81,7 @@ interface EcoOrder {
 }
 
 const PAYMENT_LABELS: Record<string, string> = {
-  CASH: 'Efectivo (contra entrega)',
+  CASH: 'Pago en sucursal / Efectivo',
   CARD: 'Tarjeta (Wompi)',
   TRANSFER: 'Transferencia bancaria',
   BITCOIN: 'Bitcoin',
