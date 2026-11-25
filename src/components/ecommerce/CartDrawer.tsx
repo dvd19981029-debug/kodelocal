@@ -28,6 +28,16 @@ export default function CartDrawer() {
   const { customer } = useCustomerAuth();
 
   const [editingQtyMap, setEditingQtyMap] = React.useState<Record<string, string>>({});
+  const [drawerStep, setDrawerStep] = React.useState<'cart' | 'upsell'>('cart');
+  const [upsellSnapshotIds, setUpsellSnapshotIds] = React.useState<string[]>([]);
+
+  // Resetear siempre al paso 1 ('cart') cuando se cierra o vacía el carrito
+  useEffect(() => {
+    if (!isCartOpen || cart.length === 0) {
+      setDrawerStep('cart');
+      setUpsellSnapshotIds([]);
+    }
+  }, [isCartOpen, cart.length]);
 
   // Motor inteligente de cross-sell tipo PedidosYa ("Otros clientes también compraron")
   // Detecta qué lleva el cliente (esencia, bote, alcohol, embudo, piseta, fijador, caja) y sugiere lo que le falta
@@ -41,7 +51,11 @@ export default function CartDrawer() {
       return { subtitle: '', items: [] };
     }
 
-    const inCartIds = new Set<string>();
+    // Si ya estamos en la vista de upsell, usamos el snapshot de productos que tenía antes de entrar a upsell
+    // para que al tocar "+ Agregar" el insumo no desaparezca bruscamente sino que muestre su contador - 1 +
+    const useSnapshot = drawerStep === 'upsell' && upsellSnapshotIds.length > 0;
+    const excludedIds = new Set<string>(useSnapshot ? upsellSnapshotIds : []);
+
     let hasLooseEssence = false;
     let hasBottle = false;
     let hasAlcohol = false;
@@ -56,15 +70,20 @@ export default function CartDrawer() {
       const poff = String(item.product?.officialName || '').toLowerCase();
       const pcat = String(item.product?.category || '');
 
-      if (item.product?.id) inCartIds.add(item.product.id);
-      if (item.selectedBottle?.id) {
-        inCartIds.add(item.selectedBottle.id);
-        hasBottle = true;
-      }
-      if (item.kitDetails?.bottleId) {
-        inCartIds.add(item.kitDetails.bottleId);
+      if (!useSnapshot) {
+        if (item.product?.id) excludedIds.add(item.product.id);
+        if (item.selectedBottle?.id) excludedIds.add(item.selectedBottle.id);
+        if (item.kitDetails?.bottleId) excludedIds.add(item.kitDetails.bottleId);
       }
 
+      if (useSnapshot && item.product?.id && !excludedIds.has(item.product.id)) {
+        // Producto recién agregado dentro del paso de upsell: no alterar la prioridad original de la vista
+        continue;
+      }
+
+      if (item.selectedBottle?.id) {
+        hasBottle = true;
+      }
       if (!item.kitDetails && pcat === 'Esencias para Perfume') {
         hasLooseEssence = true;
       }
@@ -95,10 +114,10 @@ export default function CartDrawer() {
     }
 
     const isEligible = (p: ProductItem) => {
-      if (!p || !p.id || inCartIds.has(p.id)) return false;
+      if (!p || !p.id || excludedIds.has(p.id)) return false;
       if (p.isAvailableOnline === false) return false;
-      const avail = getBottleAvailableStock(Number(p.stock || 0), cart, p.id);
-      return avail > 0;
+      const totalStock = Number(p.stock || 0);
+      return totalStock > 0;
     };
 
     const availableSupplies = catalog.filter(
@@ -122,7 +141,7 @@ export default function CartDrawer() {
     );
     const fijadorItems = findSupply((p) => {
       const s = `${p.id} ${p.name} ${p.officialName || ''}`.toLowerCase();
-      return s.includes('galaxolide') || s.includes('dipropilenglicol') || s.includes('fijador') && !s.includes('alcohol');
+      return s.includes('galaxolide') || s.includes('dipropilenglicol') || (s.includes('fijador') && !s.includes('alcohol'));
     });
     const cajaItems = findSupply((p) =>
       `${p.id} ${p.name} ${p.officialName || ''}`.toLowerCase().includes('caja')
@@ -130,7 +149,7 @@ export default function CartDrawer() {
 
     const ordered: Array<{ product: ProductItem; tag: string }> = [];
     const seen = new Set<string>();
-    const pushUnique = (list: ProductItem[], tag: string, maxCount = 2) => {
+    const pushUnique = (list: ProductItem[], tag: string, maxCount = 3) => {
       let count = 0;
       for (const prod of list) {
         if (seen.has(prod.id)) continue;
@@ -143,7 +162,7 @@ export default function CartDrawer() {
 
     // Si lleva esencia suelta pero NO lleva frasco todavía: priorizar Frascos 100ml + Alcohol + Embudo + Piseta + Fijador
     if (hasLooseEssence && !hasBottle) {
-      pushUnique(availableBottles, 'Frasco 100ml', 2);
+      pushUnique(availableBottles, 'Frasco 100ml', 3);
       if (!hasAlcohol) pushUnique(alcoholItems, 'Para tu mezcla', 2);
       if (!hasEmbudo) pushUnique(embudoItems, 'Indispensable', 1);
       if (!hasFijador) pushUnique(fijadorItems, 'Mayor fijación', 2);
@@ -157,7 +176,7 @@ export default function CartDrawer() {
       if (!hasPiseta) pushUnique(pisetaItems, 'Para dosificar', 1);
       if (!hasFijador) pushUnique(fijadorItems, 'Mayor fijación', 2);
       if (!hasCaja) pushUnique(cajaItems, 'Empaque', 1);
-      pushUnique(availableBottles, 'Otro frasco', 1);
+      pushUnique(availableBottles, 'Otro frasco 100ml', 2);
     }
     // Cualquier otro caso (lleva kit o insumos): sugerir los insumos/frascos que aún no tenga en el carrito
     else {
@@ -165,25 +184,25 @@ export default function CartDrawer() {
       if (!hasEmbudo) pushUnique(embudoItems, 'Para envasar', 1);
       if (!hasFijador) pushUnique(fijadorItems, 'Mayor fijación', 2);
       if (!hasPiseta) pushUnique(pisetaItems, 'Para dosificar', 1);
-      pushUnique(availableBottles, 'Frasco 100ml', 2);
+      pushUnique(availableBottles, 'Frasco 100ml', 3);
       if (!hasCaja) pushUnique(cajaItems, 'Empaque', 1);
     }
 
     // Completar con cualquier otro insumo disponible que no esté en el carrito
-    pushUnique(availableSupplies, 'Complemento', 4);
+    pushUnique(availableSupplies, 'Complemento', 6);
 
-    let subtitle = 'Completa tu pedido con los insumos que te faltan';
+    let subtitle = 'Completa tu pedido con los insumos que aún no llevas';
     if (hasLooseEssence && !hasBottle && !hasAlcohol) {
-      subtitle = 'Llevas esencia: agrega tu frasco, alcohol y embudo';
+      subtitle = 'Llevas esencia: ¿necesitas frasco, alcohol, embudo o fijador?';
     } else if (hasLooseEssence && hasBottle && !hasAlcohol) {
-      subtitle = 'Ya llevas esencia y bote: agrega alcohol, embudo o piseta';
+      subtitle = 'Llevas esencia y bote: ¿agregamos alcohol, embudo o piseta?';
     } else if (hasLooseEssence && hasAlcohol && !hasBottle) {
-      subtitle = 'Ya llevas esencia y alcohol: elige tu frasco y embudo';
+      subtitle = 'Llevas esencia y alcohol: ¿necesitas frascos de 100ml o embudo?';
     } else if (hasLooseEssence && hasBottle && hasAlcohol) {
-      subtitle = 'Agrega embudo, piseta o fijador extra para tu preparación';
+      subtitle = '¿Te falta embudo, piseta dosificadora o fijador extra?';
     }
 
-    const pricedItems = ordered.slice(0, 6).map(({ product, tag }) => {
+    const pricedItems = ordered.slice(0, 10).map(({ product, tag }) => {
       const pricing = applyCustomerProductPricing(Number(product.price || 0), product, 'UNIDAD', customer);
       return {
         product,
@@ -194,7 +213,7 @@ export default function CartDrawer() {
     });
 
     return { subtitle, items: pricedItems };
-  }, [isCartOpen, cart, customer]);
+  }, [isCartOpen, cart, customer, drawerStep, upsellSnapshotIds]);
 
   // Bloquear el scroll de fondo mientras el carrito esté abierto
   useEffect(() => {
@@ -232,22 +251,40 @@ export default function CartDrawer() {
       <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] max-w-full flex">
         <div className="w-full h-full bg-[#f1f4f9] shadow-2xl flex flex-col border-l border-white/80 relative z-10 overscroll-contain">
           
-          {/* Header del Carrito con botón Cerrar evidente */}
+          {/* Header del Carrito / Vista de Insumos con botón Cerrar evidente */}
           <div className="p-3.5 sm:p-5 border-b border-slate-200/80 flex items-center justify-between bg-white/70 backdrop-blur-sm shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-2xs">
-                <ShoppingBag className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-slate-900 leading-tight">Tu Carrito de Fragancias</h3>
-                <p className="text-[11px] text-slate-500 font-semibold">{totalItems} artículo{totalItems === 1 ? '' : 's'}</p>
+            <div className="flex items-center gap-2.5 min-w-0">
+              {drawerStep === 'upsell' ? (
+                <button
+                  type="button"
+                  onClick={() => setDrawerStep('cart')}
+                  className="w-8 h-8 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shadow-2xs transition-colors cursor-pointer shrink-0"
+                  title="Volver a mi carrito"
+                  aria-label="Volver a mi carrito"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+              ) : (
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-2xs shrink-0">
+                  <ShoppingBag className="w-4 h-4" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <h3 className="text-sm font-black text-slate-900 leading-tight truncate">
+                  {drawerStep === 'upsell' ? 'Otros clientes también compraron' : 'Tu Carrito de Fragancias'}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-semibold truncate">
+                  {drawerStep === 'upsell'
+                    ? missingSuppliesRecs.subtitle
+                    : `${totalItems} artículo${totalItems === 1 ? '' : 's'}`}
+                </p>
               </div>
             </div>
 
             {/* Botón de Cerrar claro y visible con texto e icono */}
             <button
               onClick={() => setIsCartOpen(false)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-700 hover:text-slate-900 text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-700 hover:text-slate-900 text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95 shrink-0"
               aria-label="Cerrar carrito"
             >
               <X className="w-4 h-4 text-slate-500" />
@@ -272,6 +309,132 @@ export default function CartDrawer() {
                 >
                   Explorar Fragancias
                 </button>
+              </div>
+            ) : drawerStep === 'upsell' ? (
+              /* ================= PASO 2: VISTA DEDICADA DE INSUMOS Y FRASCOS SUGERIDOS ================= */
+              <div className="space-y-2.5">
+                <div className="p-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black leading-tight">
+                      ¿Te falta algún insumo para tu preparación?
+                    </p>
+                    <p className="text-[10.5px] text-indigo-100 font-medium leading-snug mt-0.5">
+                      {missingSuppliesRecs.subtitle}
+                    </p>
+                  </div>
+                </div>
+
+                {missingSuppliesRecs.items.map(({ product, tag, price, originalPrice }) => {
+                  const recImg = getProductImage(product);
+                  const recTitle = formatPerfumeDisplayName(product);
+                  const cartItem = cart.find((it) => it.product?.id === product.id && !it.kitDetails);
+                  const inCartQty = cartItem ? cartItem.quantity : 0;
+                  const availToAdd = getBottleAvailableStock(
+                    Number(product.stock || 0),
+                    cart,
+                    product.id,
+                    cartItem?.id
+                  );
+                  const canAddMore = inCartQty + 1 <= availToAdd;
+
+                  return (
+                    <div
+                      key={product.id}
+                      className={`clay-card p-3 flex items-center justify-between gap-3 rounded-2xl border transition-all shadow-2xs ${
+                        inCartQty > 0
+                          ? 'bg-emerald-50/60 border-emerald-300/90'
+                          : 'bg-white border-slate-100 hover:border-indigo-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center shadow-2xs">
+                          <img
+                            src={recImg}
+                            alt={recTitle}
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/essence_bottle_blank.webp';
+                            }}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900">
+                              {tag}
+                            </span>
+                            <span className="text-[10px] font-semibold text-slate-400">
+                              • {product.unit || 'Unidad'}
+                            </span>
+                          </div>
+                          <h4 className="font-black text-xs sm:text-sm text-slate-900 leading-snug line-clamp-2" title={recTitle}>
+                            {recTitle}
+                          </h4>
+                          <div className="flex items-baseline gap-1.5 mt-0.5">
+                            {originalPrice > price && (
+                              <span className="text-[10px] font-bold text-slate-400 line-through decoration-rose-500">
+                                ${originalPrice.toFixed(2)}
+                              </span>
+                            )}
+                            <span className="text-xs sm:text-sm font-black text-indigo-700">
+                              ${price.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0">
+                        {inCartQty > 0 && cartItem ? (
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                              Agregado ✓
+                            </span>
+                            <div className="flex items-center gap-1.5 bg-white rounded-lg p-1 border border-emerald-300 shadow-2xs">
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(cartItem.id, inCartQty - 1)}
+                                className="w-6 h-6 rounded flex items-center justify-center text-slate-700 hover:bg-slate-100 font-bold cursor-pointer"
+                                aria-label="Disminuir"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="w-6 text-center text-xs font-black text-slate-900 font-mono">
+                                {inCartQty}
+                              </span>
+                              <button
+                                type="button"
+                                disabled={!canAddMore}
+                                onClick={() => updateQuantity(cartItem.id, inCartQty + 1)}
+                                className={`w-6 h-6 rounded flex items-center justify-center font-bold ${
+                                  canAddMore
+                                    ? 'text-slate-700 hover:bg-slate-100 cursor-pointer'
+                                    : 'text-slate-300 cursor-not-allowed opacity-40'
+                                }`}
+                                aria-label="Aumentar"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => addToCart(product, 'UNIDAD', 1)}
+                            className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-black flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Agregar</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               cart.map((item) => {
@@ -549,101 +712,8 @@ export default function CartDrawer() {
               })
             )}
 
-            {/* Carrusel / Lista tipo PedidosYa: "Otros clientes también compraron" (Insumos y botes faltantes) */}
-            {cart.length > 0 && missingSuppliesRecs.items.length > 0 && (
-              <div className="mt-2 p-3 rounded-2xl bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/80 border border-indigo-200/80 shadow-2xs space-y-2.5">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                      <h4 className="text-xs font-black text-slate-900 leading-tight">
-                        Otros clientes también compraron
-                      </h4>
-                    </div>
-                    <p className="text-[10.5px] font-semibold text-indigo-700/90 mt-0.5">
-                      {missingSuppliesRecs.subtitle}
-                    </p>
-                  </div>
-                  <span className="text-[9.5px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 shrink-0">
-                    +{missingSuppliesRecs.items.length} sugeridos
-                  </span>
-                </div>
-
-                <div className="flex gap-2.5 overflow-x-auto pb-1.5 pt-0.5 snap-x snap-mandatory scrollbar-thin">
-                  {missingSuppliesRecs.items.map(({ product, tag, price, originalPrice }) => {
-                    const recImg = getProductImage(product);
-                    const recTitle = formatPerfumeDisplayName(product);
-
-                    return (
-                      <div
-                        key={product.id}
-                        className="snap-start shrink-0 w-[142px] bg-white rounded-xl border border-slate-200/90 p-2 flex flex-col justify-between gap-1.5 shadow-2xs hover:border-indigo-300 transition-all"
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className="text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-100/90 text-amber-900 truncate">
-                              {tag}
-                            </span>
-                            <span className="text-[9px] font-bold text-slate-400 truncate">
-                              {product.unit || 'Unidad'}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center">
-                              <img
-                                src={recImg}
-                                alt={recTitle}
-                                loading="lazy"
-                                decoding="async"
-                                onError={(e) => {
-                                  e.currentTarget.src = '/images/essence_bottle_blank.webp';
-                                }}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p
-                                className="text-[10.5px] font-black text-slate-900 leading-tight line-clamp-2"
-                                title={recTitle}
-                              >
-                                {recTitle}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 mt-0.5">
-                          <div className="flex flex-col">
-                            {originalPrice > price && (
-                              <span className="text-[9px] font-bold text-slate-400 line-through leading-none">
-                                ${originalPrice.toFixed(2)}
-                              </span>
-                            )}
-                            <span className="text-xs font-black text-indigo-700 leading-tight">
-                              ${price.toFixed(2)}
-                            </span>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => addToCart(product, 'UNIDAD', 1)}
-                            className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-[10px] font-black flex items-center gap-0.5 transition-all cursor-pointer shadow-2xs"
-                            title={`Agregar ${recTitle} al carrito`}
-                          >
-                            <Plus className="w-3 h-3" />
-                            <span>Agregar</span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             {/* Aviso Importante de preparación de esencias con alcohol */}
-            {cart.length > 0 && (
+            {cart.length > 0 && drawerStep === 'cart' && (
               <div className="p-3 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-xs text-amber-950 space-y-1 mt-1 shadow-2xs">
                 <div className="flex items-center gap-1.5 font-bold text-amber-900 text-[11px]">
                   <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
@@ -656,7 +726,7 @@ export default function CartDrawer() {
             )}
           </div>
 
-          {/* Footer del Carrito con Subtotal, Pago Seguro y botón Seguir Comprando */}
+          {/* Footer del Carrito con Subtotal, Continuar a Insumos -> Pago Seguro y botón Seguir Comprando */}
           {cart.length > 0 && (
             <div className="p-3.5 sm:p-5 border-t border-slate-200/80 bg-white/95 backdrop-blur-sm space-y-2.5 shrink-0">
               <div className="space-y-1.5 text-xs">
@@ -705,30 +775,61 @@ export default function CartDrawer() {
                 </div>
               </div>
 
-              {/* Botón Principal: Proceder a pago seguro */}
-              <Link
-                href="/checkout"
-                onClick={() => {
-                  if (typeof document !== 'undefined') {
-                    document.body.style.overflow = '';
-                  }
-                  setIsCartOpen(false);
-                }}
-                className="clay-btn clay-btn-primary w-full py-3 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-2 !shadow-[0_4px_16px_rgba(99,102,241,0.4)] tracking-wide cursor-pointer active:scale-95"
-              >
-                <span>Proceder a pago seguro</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              {/* Botón Principal: En Paso 1 dice "Continuar" (abre la vista de insumos faltantes); en Paso 2 dice "Proceder a pago seguro" */}
+              {drawerStep === 'cart' && missingSuppliesRecs.items.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentIds: string[] = [];
+                    for (const it of cart) {
+                      if (it.product?.id) currentIds.push(it.product.id);
+                      if (it.selectedBottle?.id) currentIds.push(it.selectedBottle.id);
+                      if (it.kitDetails?.bottleId) currentIds.push(it.kitDetails.bottleId);
+                    }
+                    setUpsellSnapshotIds(currentIds);
+                    setDrawerStep('upsell');
+                  }}
+                  className="clay-btn clay-btn-primary w-full py-3 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-2 !shadow-[0_4px_16px_rgba(99,102,241,0.4)] tracking-wide cursor-pointer active:scale-95"
+                >
+                  <span>Continuar</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <Link
+                  href="/checkout"
+                  onClick={() => {
+                    if (typeof document !== 'undefined') {
+                      document.body.style.overflow = '';
+                    }
+                    setIsCartOpen(false);
+                  }}
+                  className="clay-btn clay-btn-primary w-full py-3 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-2 !shadow-[0_4px_16px_rgba(99,102,241,0.4)] tracking-wide cursor-pointer active:scale-95"
+                >
+                  <span>Proceder a pago seguro</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              )}
 
-              {/* Botón Explícito: Seguir Comprando / Agregar más */}
-              <button
-                type="button"
-                onClick={() => setIsCartOpen(false)}
-                className="w-full py-2.5 rounded-xl text-xs font-black text-slate-700 bg-white hover:bg-slate-50 border-2 border-slate-200/80 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs active:scale-95"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Seguir Comprando (Agregar más)</span>
-              </button>
+              {/* Botón Secundario: En Paso 2 vuelve al carrito; en Paso 1 cierra para seguir comprando */}
+              {drawerStep === 'upsell' ? (
+                <button
+                  type="button"
+                  onClick={() => setDrawerStep('cart')}
+                  className="w-full py-2.5 rounded-xl text-xs font-black text-slate-700 bg-white hover:bg-slate-50 border-2 border-slate-200/80 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs active:scale-95"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Volver a mi carrito</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsCartOpen(false)}
+                  className="w-full py-2.5 rounded-xl text-xs font-black text-slate-700 bg-white hover:bg-slate-50 border-2 border-slate-200/80 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs active:scale-95"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Seguir Comprando (Agregar más)</span>
+                </button>
+              )}
 
               <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold text-slate-400 pt-0.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
