@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { 
@@ -49,42 +49,32 @@ function CheckoutResultadoContent() {
 
   const identificador = rawIdentificador;
 
-  // En Wompi 'esAprobada' puede venir como 'True', 'true' o no venir si es enlace de pago
+  // En Wompi 'esAprobada' puede venir explícitamente como 'false' o no venir en absoluto en la URL de redirección.
+  // NUNCA debemos mostrar "Pago Confirmado" en pantalla sin antes validar con nuestro servidor (/api/ecommerce/orders PATCH)
+  // contra la API oficial de Wompi que la transacción fue realmente aprobada.
   const esAprobadaLower = (esAprobada || '').trim().toLowerCase();
-  const isApproved = esAprobadaLower === 'true' 
-    || esAprobadaLower === 'exitosaaprobada' 
-    || (!esAprobada && Boolean(idTransaccion)) 
-    || (!esAprobada && Boolean(identificador));
+  const isExplicitlyRejected =
+    esAprobadaLower === 'false' ||
+    esAprobadaLower === 'fallida' ||
+    esAprobadaLower === 'rechazada' ||
+    esAprobadaLower === 'denegada';
 
-  // Confirmar pago en la base de datos inmediatamente al volver de Wompi, guardar orden de invitado y vaciar carrito
+  const [verificationState, setVerificationState] = useState<'verifying' | 'approved' | 'rejected'>(
+    isExplicitlyRejected || (!idTransaccion && !identificador) ? 'rejected' : 'verifying'
+  );
+  const [serverErrorMsg, setServerErrorMsg] = useState<string | null>(null);
+
   useEffect(() => {
-    if (isApproved) {
-      clearCart();
-      if (identificador) {
-        addGuestOrderNumber(identificador, {
-          total: monto ? Number(monto) : undefined,
-          paymentMethod: 'CARD',
-          paymentStatus: 'COMPLETED',
-        });
+    if (isExplicitlyRejected || (!idTransaccion && !identificador)) {
+      setVerificationState('rejected');
+      return;
+    }
 
-        // Registrar evento estándar Meta Pixel Purchase al aprobarse el cobro con tarjeta en Wompi
-        let fallbackTotal = monto ? Number(monto) : 0;
-        if (!fallbackTotal) {
-          try {
-            const savedPending = sessionStorage.getItem(`aromaniak_pending_meta_order_${identificador}`);
-            if (savedPending) {
-              const parsed = JSON.parse(savedPending);
-              if (parsed.totalValue) fallbackTotal = Number(parsed.totalValue);
-            }
-          } catch (_) {}
-        }
-        trackMetaPurchase({
-          orderNumber: identificador,
-          totalValue: fallbackTotal,
-        });
+    let cancelled = false;
 
-        // Notificar al servidor el éxito del pago
-        fetch('/api/ecommerce/orders', {
+    async function verifyWithServer() {
+      try {
+        const res = await fetch('/api/ecommerce/orders', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -93,10 +83,72 @@ function CheckoutResultadoContent() {
             transactionId: idTransaccion || undefined,
             notes: `[Pago Aprobado Wompi Tx: ${idTransaccion || 'N/A'}]`,
           }),
-        }).catch((err) => console.error('Error actualizando estado de pago:', err));
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (cancelled) return;
+
+        if (res.ok && data.success) {
+          setVerificationState('approved');
+          clearCart();
+          if (identificador) {
+            addGuestOrderNumber(identificador, {
+              total: monto ? Number(monto) : undefined,
+              paymentMethod: 'CARD',
+              paymentStatus: 'COMPLETED',
+            });
+
+            let fallbackTotal = monto ? Number(monto) : 0;
+            if (!fallbackTotal) {
+              try {
+                const savedPending = sessionStorage.getItem(`aromaniak_pending_meta_order_${identificador}`);
+                if (savedPending) {
+                  const parsed = JSON.parse(savedPending);
+                  if (parsed.totalValue) fallbackTotal = Number(parsed.totalValue);
+                }
+              } catch (_) {}
+            }
+            trackMetaPurchase({
+              orderNumber: identificador,
+              totalValue: fallbackTotal,
+            });
+          }
+        } else {
+          setServerErrorMsg(data.error || 'La transacción no fue autorizada por el banco o no pudo verificarse.');
+          setVerificationState('rejected');
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Error verificando estado de pago:', err);
+          setServerErrorMsg('No se pudo confirmar la autorización bancaria de la transacción.');
+          setVerificationState('rejected');
+        }
       }
     }
-  }, [isApproved, identificador, idTransaccion, monto, clearCart]);
+
+    verifyWithServer();
+    return () => {
+      cancelled = true;
+    };
+  }, [isExplicitlyRejected, identificador, idTransaccion, monto, clearCart]);
+
+  if (verificationState === 'verifying') {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center py-10 px-4">
+        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200/80 shadow-xl p-6 sm:p-8 text-center space-y-4">
+          <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mx-auto" />
+          <h1 className="text-lg sm:text-xl font-black text-slate-900">
+            Verificando tu pago con el banco...
+          </h1>
+          <p className="text-xs text-slate-500 font-medium">
+            Confirmando la autorización de la transacción en Wompi • Banco Agrícola.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const isApproved = verificationState === 'approved';
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center py-10 px-4">
@@ -179,7 +231,7 @@ function CheckoutResultadoContent() {
                 El pago no fue completado
               </h1>
               <p className="text-xs text-slate-500 font-medium">
-                {mensaje || 'La transacción no pudo ser autorizada por el banco o fue cancelada.'}
+                {mensaje || serverErrorMsg || 'La transacción no pudo ser autorizada por el banco o fue cancelada.'}
               </p>
             </div>
 
