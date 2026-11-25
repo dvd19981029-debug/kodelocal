@@ -6,6 +6,7 @@ import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck
 import { useEcommerceCart, getEssenceDiscreteStock, getBottleAvailableStock, applyCustomerProductPricing } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { getStoredProducts, ProductItem } from '@/lib/store';
+import { useLiveProducts } from '@/hooks/useLiveProducts';
 import { trackMetaInitiateCheckout } from '@/components/analytics/MarketingScripts';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
@@ -30,6 +31,7 @@ export default function CartDrawer() {
   const [editingQtyMap, setEditingQtyMap] = React.useState<Record<string, string>>({});
   const [drawerStep, setDrawerStep] = React.useState<'cart' | 'upsell'>('cart');
   const [upsellSnapshotIds, setUpsellSnapshotIds] = React.useState<string[]>([]);
+  const liveCatalog = useLiveProducts();
 
   // Resetear siempre al paso 1 ('cart') cuando se cierra o vacía el carrito
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function CartDrawer() {
       return { subtitle: '', items: [] as Array<{ product: ProductItem; tag: string; price: number; originalPrice: number }> };
     }
 
-    const catalog = getStoredProducts() || [];
+    const catalog = liveCatalog && liveCatalog.length > 0 ? liveCatalog : (getStoredProducts() || []);
     if (catalog.length === 0) {
       return { subtitle: '', items: [] };
     }
@@ -213,7 +215,7 @@ export default function CartDrawer() {
     });
 
     return { subtitle, items: pricedItems };
-  }, [isCartOpen, cart, customer, drawerStep, upsellSnapshotIds]);
+  }, [isCartOpen, cart, customer, drawerStep, upsellSnapshotIds, liveCatalog]);
 
   // Bloquear el scroll de fondo mientras el carrito esté abierto
   useEffect(() => {
@@ -251,29 +253,29 @@ export default function CartDrawer() {
       <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] max-w-full flex">
         <div className="w-full h-full bg-[#f1f4f9] shadow-2xl flex flex-col border-l border-white/80 relative z-10 overscroll-contain">
           
-          {/* Header del Carrito / Vista de Insumos con botón Cerrar evidente */}
-          <div className="p-3.5 sm:p-5 border-b border-slate-200/80 flex items-center justify-between bg-white/70 backdrop-blur-sm shrink-0">
-            <div className="flex items-center gap-2.5 min-w-0">
+          {/* Header compacto del Carrito / Vista de Insumos */}
+          <div className="px-3.5 py-2.5 sm:px-4 sm:py-3 border-b border-slate-200/80 flex items-center justify-between bg-white/75 backdrop-blur-sm shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
               {drawerStep === 'upsell' ? (
                 <button
                   type="button"
                   onClick={() => setDrawerStep('cart')}
-                  className="w-8 h-8 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shadow-2xs transition-colors cursor-pointer shrink-0"
+                  className="w-7 h-7 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shadow-2xs transition-colors cursor-pointer shrink-0"
                   title="Volver a mi carrito"
                   aria-label="Volver a mi carrito"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="w-3.5 h-3.5" />
                 </button>
               ) : (
-                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-2xs shrink-0">
-                  <ShoppingBag className="w-4 h-4" />
+                <div className="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-2xs shrink-0">
+                  <ShoppingBag className="w-3.5 h-3.5" />
                 </div>
               )}
               <div className="min-w-0">
-                <h3 className="text-sm font-black text-slate-900 leading-tight truncate">
+                <h3 className="text-xs sm:text-sm font-black text-slate-900 leading-tight truncate">
                   {drawerStep === 'upsell' ? 'Otros clientes también compraron' : 'Tu Carrito de Fragancias'}
                 </h3>
-                <p className="text-[11px] text-slate-500 font-semibold truncate">
+                <p className="text-[10.5px] text-slate-500 font-semibold truncate">
                   {drawerStep === 'upsell'
                     ? missingSuppliesRecs.subtitle
                     : `${totalItems} artículo${totalItems === 1 ? '' : 's'}`}
@@ -284,16 +286,16 @@ export default function CartDrawer() {
             {/* Botón de Cerrar claro y visible con texto e icono */}
             <button
               onClick={() => setIsCartOpen(false)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-700 hover:text-slate-900 text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95 shrink-0"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-700 hover:text-slate-900 text-[11px] font-black transition-all cursor-pointer shadow-2xs active:scale-95 shrink-0"
               aria-label="Cerrar carrito"
             >
-              <X className="w-4 h-4 text-slate-500" />
+              <X className="w-3.5 h-3.5 text-slate-500" />
               <span>Cerrar</span>
             </button>
           </div>
 
           {/* Lista de Productos Scrollable */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 overscroll-contain">
+          <div className="flex-1 overflow-y-auto p-2.5 sm:p-3 space-y-1.5 overscroll-contain">
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
                 <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-400 flex items-center justify-center shadow-inner">
@@ -312,16 +314,16 @@ export default function CartDrawer() {
               </div>
             ) : drawerStep === 'upsell' ? (
               /* ================= PASO 2: VISTA DEDICADA DE INSUMOS Y FRASCOS SUGERIDOS ================= */
-              <div className="space-y-2.5">
-                <div className="p-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-                    <Sparkles className="w-4 h-4 text-amber-300" />
+              <div className="space-y-1.5">
+                <div className="px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-2xs flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-black leading-tight">
+                    <p className="text-[11.5px] font-black leading-tight">
                       ¿Te falta algún insumo para tu preparación?
                     </p>
-                    <p className="text-[10.5px] text-indigo-100 font-medium leading-snug mt-0.5">
+                    <p className="text-[10px] text-indigo-100 font-medium leading-tight mt-0.5 truncate">
                       {missingSuppliesRecs.subtitle}
                     </p>
                   </div>
@@ -343,14 +345,14 @@ export default function CartDrawer() {
                   return (
                     <div
                       key={product.id}
-                      className={`clay-card p-3 flex items-center justify-between gap-3 rounded-2xl border transition-all shadow-2xs ${
+                      className={`clay-card px-2.5 py-2 flex items-center justify-between gap-2.5 rounded-xl border transition-all shadow-2xs ${
                         inCartQty > 0
                           ? 'bg-emerald-50/60 border-emerald-300/90'
                           : 'bg-white border-slate-100 hover:border-indigo-200'
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center shadow-2xs">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center shadow-2xs">
                           <img
                             src={recImg}
                             alt={recTitle}
@@ -364,24 +366,24 @@ export default function CartDrawer() {
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900">
+                          <div className="flex items-center gap-1 mb-0.5">
+                            <span className="text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-amber-100 text-amber-900">
                               {tag}
                             </span>
-                            <span className="text-[10px] font-semibold text-slate-400">
+                            <span className="text-[9.5px] font-semibold text-slate-400">
                               • {product.unit || 'Unidad'}
                             </span>
                           </div>
-                          <h4 className="font-black text-xs sm:text-sm text-slate-900 leading-snug line-clamp-2" title={recTitle}>
+                          <h4 className="font-black text-xs text-slate-900 leading-tight truncate" title={recTitle}>
                             {recTitle}
                           </h4>
                           <div className="flex items-baseline gap-1.5 mt-0.5">
                             {originalPrice > price && (
-                              <span className="text-[10px] font-bold text-slate-400 line-through decoration-rose-500">
+                              <span className="text-[9.5px] font-bold text-slate-400 line-through decoration-rose-500">
                                 ${originalPrice.toFixed(2)}
                               </span>
                             )}
-                            <span className="text-xs sm:text-sm font-black text-indigo-700">
+                            <span className="text-xs font-black text-indigo-700">
                               ${price.toFixed(2)}
                             </span>
                           </div>
@@ -390,27 +392,27 @@ export default function CartDrawer() {
 
                       <div className="shrink-0">
                         {inCartQty > 0 && cartItem ? (
-                          <div className="flex flex-col items-end gap-1">
-                            <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                              Agregado ✓
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full hidden sm:inline">
+                              ✓
                             </span>
-                            <div className="flex items-center gap-1.5 bg-white rounded-lg p-1 border border-emerald-300 shadow-2xs">
+                            <div className="flex items-center gap-1 bg-white rounded-lg p-0.5 border border-emerald-300 shadow-2xs">
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(cartItem.id, inCartQty - 1)}
-                                className="w-6 h-6 rounded flex items-center justify-center text-slate-700 hover:bg-slate-100 font-bold cursor-pointer"
+                                className="w-5 h-5 rounded flex items-center justify-center text-slate-700 hover:bg-slate-100 font-bold cursor-pointer"
                                 aria-label="Disminuir"
                               >
                                 <Minus className="w-3 h-3" />
                               </button>
-                              <span className="w-6 text-center text-xs font-black text-slate-900 font-mono">
+                              <span className="w-5 text-center text-[11px] font-black text-slate-900 font-mono">
                                 {inCartQty}
                               </span>
                               <button
                                 type="button"
                                 disabled={!canAddMore}
                                 onClick={() => updateQuantity(cartItem.id, inCartQty + 1)}
-                                className={`w-6 h-6 rounded flex items-center justify-center font-bold ${
+                                className={`w-5 h-5 rounded flex items-center justify-center font-bold ${
                                   canAddMore
                                     ? 'text-slate-700 hover:bg-slate-100 cursor-pointer'
                                     : 'text-slate-300 cursor-not-allowed opacity-40'
@@ -425,9 +427,9 @@ export default function CartDrawer() {
                           <button
                             type="button"
                             onClick={() => addToCart(product, 'UNIDAD', 1)}
-                            className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-black flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                            className="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-[11px] font-black flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
                           >
-                            <Plus className="w-3.5 h-3.5" />
+                            <Plus className="w-3 h-3" />
                             <span>Agregar</span>
                           </button>
                         )}
@@ -444,267 +446,250 @@ export default function CartDrawer() {
                 return (
                   <div 
                     key={item.id}
-                    className="clay-card p-3 sm:p-3.5 flex flex-col gap-2.5 bg-white border border-slate-100 rounded-2xl relative group shadow-2xs"
+                    className="clay-card px-2.5 py-2 flex items-center gap-2.5 bg-white border border-slate-100 rounded-xl relative group shadow-2xs"
                   >
-                    <div className="flex items-start gap-3">
-                      {/* Miniatura visual de la fragancia / producto */}
-                      <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center shadow-2xs">
-                        {item.kitDetails ? (
-                          <div className="relative w-full h-full flex items-center justify-center p-1 bg-gradient-to-br from-amber-50/60 to-purple-50/60">
-                            {/* Bote Contratipo (Bote de Onza) */}
-                            <img
-                              src={'/images/essence_bottle_blank.webp'}
-                              alt={displayName}
-                              loading="lazy"
-                              decoding="async"
-                              onError={(e) => {
-                                e.currentTarget.src = '/images/essence_bottle_blank.webp';
-                              }}
-                              className="absolute left-1 top-1 w-9 h-9 sm:w-10 sm:h-10 rounded-lg object-cover border border-amber-300 z-10 shadow-xs"
-                            />
-                            {/* Frasco Atomizador 100ml */}
-                            <img
-                              src={item.kitDetails.bottleImageUrl || '/images/botes/bote_100ml_degrade_azul_noche.jpg'}
-                              alt={item.kitDetails.bottleName}
-                              loading="lazy"
-                              decoding="async"
-                              onError={(e) => {
-                                e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
-                              }}
-                              className="absolute right-1 bottom-1 w-9 h-9 sm:w-10 sm:h-10 rounded-lg object-cover border border-slate-300 z-20 shadow-xs"
-                            />
-                            <span className="absolute bottom-0 inset-x-0 bg-indigo-950/90 text-[7.5px] font-black text-amber-300 text-center py-0.2 tracking-tight z-30">
-                              Kit 100ml
-                            </span>
-                          </div>
-                        ) : (
+                    {/* Miniatura compacta */}
+                    <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center shadow-2xs">
+                      {item.kitDetails ? (
+                        <div className="relative w-full h-full flex items-center justify-center p-0.5 bg-gradient-to-br from-amber-50/60 to-purple-50/60">
                           <img
-                            src={productImage}
+                            src={'/images/essence_bottle_blank.webp'}
                             alt={displayName}
                             loading="lazy"
                             decoding="async"
                             onError={(e) => {
                               e.currentTarget.src = '/images/essence_bottle_blank.webp';
                             }}
-                            className="w-full h-full object-cover object-center"
+                            className="absolute left-0.5 top-0.5 w-6 h-6 rounded object-cover border border-amber-300 z-10"
                           />
-                        )}
-                      </div>
-
-                      {/* Información de la fragancia */}
-                      <div className="flex-1 min-w-0 pr-0.5">
-                        <div className="flex items-start justify-between gap-1.5">
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-black text-xs sm:text-sm text-slate-900 leading-snug truncate" title={displayName}>
-                              {displayName}
-                            </h4>
-                            <div className="text-[11px] truncate" title={item.product.category === 'Esencias para Perfume' ? `Inspirado en ${getInspiracionPerfumeName(item.product)}` : ''}>
-                              {item.product.category === 'Esencias para Perfume' ? (
-                                <>
-                                  <span className="text-slate-600 font-medium">Inspirado en </span>
-                                  <span className="text-slate-950 font-black text-[11.5px]">{getInspiracionPerfumeName(item.product)}</span>
-                                </>
-                              ) : (
-                                <span className="text-slate-500 font-medium">{item.product.unit || 'Unidad'}</span>
-                              )}
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={() => removeFromCart(item.id)}
-                            className="text-slate-300 hover:text-rose-600 p-1 rounded-lg transition-colors cursor-pointer shrink-0"
-                            title="Quitar del carrito"
-                            aria-label="Quitar producto"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <img
+                            src={item.kitDetails.bottleImageUrl || '/images/botes/bote_100ml_degrade_azul_noche.jpg'}
+                            alt={item.kitDetails.bottleName}
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/botes/bote_100ml_degrade_azul_noche.jpg';
+                            }}
+                            className="absolute right-0.5 bottom-0.5 w-6 h-6 rounded object-cover border border-slate-300 z-20"
+                          />
+                          <span className="absolute bottom-0 inset-x-0 bg-indigo-950/90 text-[6.5px] font-black text-amber-300 text-center leading-tight z-30">
+                            Kit 100ml
+                          </span>
                         </div>
-
-                        {/* Detalles de presentación o kit limpio */}
-                        {item.kitDetails ? (
-                          <div className="mt-1.5 p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[10px] space-y-0.5 text-slate-700">
-                            <div className="flex items-center justify-between font-bold">
-                              <span className="text-indigo-700">
-                                {item.kitDetails.isPlus ? 'Perfume Preparado PLUS (100ml)' : 'Perfume Preparado (100ml)'}
-                              </span>
-                              <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-md ${
-                                item.kitDetails.isPlus 
-                                  ? 'bg-amber-100 text-amber-900 border border-amber-300/60' 
-                                  : 'bg-indigo-100 text-indigo-800'
-                              }`}>
-                                {item.kitDetails.isPlus ? '1.5 Onzas PLUS' : '1 Onza'}
-                              </span>
-                            </div>
-                            <p className="text-[9.5px] text-slate-500 truncate">
-                              Frasco: <strong className="text-slate-700">{item.kitDetails.bottleName}</strong> • {item.kitDetails.hasLabel ? 'Con etiqueta' : 'Sin etiqueta'}
-                            </p>
-                          </div>
-                        ) : item.selectedBottle ? (
-                          <div className="mt-1 flex items-center justify-between text-[10.5px]">
-                            <span className="font-bold text-indigo-600">{item.presentationName}</span>
-                            <span className="text-[9.5px] text-slate-500 truncate">Frasco: {item.selectedBottle.name}</span>
-                          </div>
-                        ) : (
-                          <p className="text-[11px] font-semibold text-indigo-600 mt-1">
-                            {item.presentationName}
-                          </p>
-                        )}
-                      </div>
+                      ) : (
+                        <img
+                          src={productImage}
+                          alt={displayName}
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => {
+                            e.currentTarget.src = '/images/essence_bottle_blank.webp';
+                          }}
+                          className="w-full h-full object-cover object-center"
+                        />
+                      )}
                     </div>
 
-                    {/* Fila inferior: Cantidad y Precio */}
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                      {/* Control de cantidad */}
-                      <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg p-1 border border-slate-200/80 shadow-2xs">
-                        {(() => {
-                          const prod = item.product;
-                          const storedCatalog = typeof window !== 'undefined' ? getStoredProducts() : [];
-                          const liveProd = storedCatalog.find((p) => p.id === (item.kitDetails?.essenceId || prod.id)) || prod;
-                          const totalStock = typeof liveProd.stock === 'number' ? liveProd.stock : 0;
-                          const isEssence = liveProd.category === 'Esencias para Perfume' || prod.category === 'Esencias para Perfume';
-                          let maxAvailableInDrawer = 9999;
+                    {/* Contenido principal en bloque compacto */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-1">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-black text-xs text-slate-900 leading-tight truncate" title={displayName}>
+                            {displayName}
+                          </h4>
+                          <div className="text-[10.5px] truncate leading-tight mt-0.5" title={item.product.category === 'Esencias para Perfume' ? `Inspirado en ${getInspiracionPerfumeName(item.product)}` : ''}>
+                            {item.product.category === 'Esencias para Perfume' ? (
+                              <>
+                                <span className="text-slate-500 font-medium">Inspirado en </span>
+                                <span className="text-slate-900 font-black">{getInspiracionPerfumeName(item.product)}</span>
+                              </>
+                            ) : (
+                              <span className="text-slate-500 font-medium">{item.product.unit || 'Unidad'}</span>
+                            )}
+                          </div>
+                        </div>
 
-                          if (item.kitDetails) {
-                            const discrete = getEssenceDiscreteStock(totalStock, cart, item.kitDetails.essenceId, item.id, liveProd.stockHalf || 0);
-                            maxAvailableInDrawer = discrete.available1oz;
-                            if (item.kitDetails.isPlus) {
-                              maxAvailableInDrawer = Math.min(maxAvailableInDrawer, discrete.availableHalfOz);
-                            }
-                            if (item.kitDetails.bottleId) {
-                              const liveBottle = storedCatalog.find((p) => p.id === item.kitDetails?.bottleId);
-                              if (liveBottle) {
-                                const availBottle = getBottleAvailableStock(
-                                  typeof liveBottle.stock === 'number' ? liveBottle.stock : 0,
-                                  cart,
-                                  item.kitDetails.bottleId,
-                                  item.id
-                                );
-                                maxAvailableInDrawer = Math.min(maxAvailableInDrawer, availBottle);
-                              }
-                            }
-                          } else if (isEssence) {
-                            const discrete = getEssenceDiscreteStock(totalStock, cart, prod.id, item.id, liveProd.stockHalf || 0);
-                            if (item.presentation === 'ONZA_COMPLETA') {
-                              maxAvailableInDrawer = discrete.available1oz;
-                            } else if (item.presentation === 'MEDIA_ONZA') {
-                              maxAvailableInDrawer = discrete.availableHalfOz;
-                            }
-                          } else {
-                            maxAvailableInDrawer = getBottleAvailableStock(totalStock, cart, prod.id, item.id);
-                          }
-
-                          const maxAllowedQty = Math.max(1, maxAvailableInDrawer);
-                          const canAddMoreInDrawer = item.quantity + 1 <= maxAvailableInDrawer;
-                          const displayValue =
-                            editingQtyMap[item.id] !== undefined ? editingQtyMap[item.id] : String(item.quantity);
-
-                          return (
-                            <>
-                              <button
-                                onClick={() => {
-                                  setEditingQtyMap((prev) => {
-                                    if (prev[item.id] === undefined) return prev;
-                                    const next = { ...prev };
-                                    delete next[item.id];
-                                    return next;
-                                  });
-                                  updateQuantity(item.id, item.quantity - 1);
-                                }}
-                                className="w-5 h-5 rounded flex items-center justify-center text-slate-600 hover:bg-white font-bold cursor-pointer transition-colors"
-                                aria-label="Disminuir una unidad"
-                              >
-                                <Minus className="w-3 h-3" />
-                              </button>
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                value={displayValue}
-                                onFocus={(e) => {
-                                  setEditingQtyMap((prev) => ({ ...prev, [item.id]: String(item.quantity) }));
-                                  e.target.select();
-                                }}
-                                onChange={(e) => {
-                                  const raw = e.target.value.replace(/\D/g, '');
-                                  if (raw === '') {
-                                    setEditingQtyMap((prev) => ({ ...prev, [item.id]: '' }));
-                                    return;
-                                  }
-                                  const parsed = parseInt(raw, 10);
-                                  if (isNaN(parsed)) return;
-                                  if (parsed === 0) {
-                                    setEditingQtyMap((prev) => ({ ...prev, [item.id]: '0' }));
-                                    return;
-                                  }
-                                  const clamped = Math.min(parsed, maxAllowedQty);
-                                  setEditingQtyMap((prev) => ({ ...prev, [item.id]: String(clamped) }));
-                                  if (clamped !== item.quantity) {
-                                    updateQuantity(item.id, clamped);
-                                  }
-                                }}
-                                onBlur={() => {
-                                  const draftVal = editingQtyMap[item.id];
-                                  setEditingQtyMap((prev) => {
-                                    const next = { ...prev };
-                                    delete next[item.id];
-                                    return next;
-                                  });
-                                  if (draftVal === '0') {
-                                    removeFromCart(item.id);
-                                  }
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    (e.target as HTMLInputElement).blur();
-                                  }
-                                }}
-                                title={`Editar cantidad (máx. ${maxAllowedQty} disponibles)`}
-                                aria-label="Cantidad"
-                                className="w-9 h-5 text-xs font-black text-center text-slate-800 bg-white rounded border border-slate-200/90 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none px-0.5 font-mono"
-                              />
-                              <button
-                                onClick={() => {
-                                  setEditingQtyMap((prev) => {
-                                    if (prev[item.id] === undefined) return prev;
-                                    const next = { ...prev };
-                                    delete next[item.id];
-                                    return next;
-                                  });
-                                  updateQuantity(item.id, item.quantity + 1);
-                                }}
-                                disabled={!canAddMoreInDrawer}
-                                className={`w-5 h-5 rounded flex items-center justify-center font-bold transition-colors ${
-                                  canAddMoreInDrawer 
-                                    ? 'text-slate-600 hover:bg-white cursor-pointer' 
-                                    : 'text-slate-300 cursor-not-allowed opacity-40'
-                                }`}
-                                title={canAddMoreInDrawer ? "Aumentar una unidad" : "Inventario máximo alcanzado"}
-                                aria-label="Aumentar una unidad"
-                              >
-                                <Plus className="w-3 h-3" />
-                              </button>
-                            </>
-                          );
-                        })()}
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-slate-300 hover:text-rose-600 p-0.5 rounded transition-colors cursor-pointer shrink-0"
+                          title="Quitar del carrito"
+                          aria-label="Quitar producto"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
 
-                      {/* Precio alineado */}
-                      <div className="text-right shrink-0">
-                        <div className="flex items-baseline justify-end gap-1.5">
-                          {item.originalUnitPrice && item.originalUnitPrice > item.unitPrice && (
-                            <span className="text-[10px] font-bold text-slate-400 line-through decoration-rose-500">
-                              ${(item.originalUnitPrice * item.quantity).toFixed(2)}
+                      {/* Presentación / Kit + Controles y Precio en la misma fila compacta */}
+                      <div className="flex items-center justify-between gap-2 mt-1.5">
+                        <div className="min-w-0 flex-1">
+                          {item.kitDetails ? (
+                            <div className="text-[9.5px] leading-tight text-slate-600 truncate">
+                              <span className="font-bold text-indigo-700">
+                                {item.kitDetails.isPlus ? 'Kit PLUS (1.5 oz)' : 'Kit 100ml (1 oz)'}
+                              </span>
+                              <span className="text-slate-400"> • {item.kitDetails.bottleName}</span>
+                            </div>
+                          ) : item.selectedBottle ? (
+                            <div className="text-[10px] leading-tight truncate">
+                              <span className="font-bold text-indigo-600">{item.presentationName}</span>
+                              <span className="text-slate-400"> • {item.selectedBottle.name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-[10.5px] font-bold text-indigo-600 leading-tight block truncate">
+                              {item.presentationName}
                             </span>
                           )}
-                          <span className="text-xs sm:text-sm font-black text-slate-900">
-                            ${item.totalPrice.toFixed(2)}
-                          </span>
                         </div>
-                        {item.quantity > 1 && (
-                          <span className="text-[9.5px] text-slate-400 block font-medium">
-                            (${item.unitPrice.toFixed(2)} c/u)
-                          </span>
-                        )}
+
+                        {/* Control de cantidad + Precio en línea */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-1 bg-slate-50 rounded-lg p-0.5 border border-slate-200/80">
+                            {(() => {
+                              const prod = item.product;
+                              const storedCatalog = liveCatalog && liveCatalog.length > 0 ? liveCatalog : (typeof window !== 'undefined' ? getStoredProducts() : []);
+                              const liveProd = storedCatalog.find((p) => p.id === (item.kitDetails?.essenceId || prod.id)) || prod;
+                              const totalStock = typeof liveProd.stock === 'number' ? liveProd.stock : 0;
+                              const isEssence = liveProd.category === 'Esencias para Perfume' || prod.category === 'Esencias para Perfume';
+                              let maxAvailableInDrawer = 9999;
+
+                              if (item.kitDetails) {
+                                const discrete = getEssenceDiscreteStock(totalStock, cart, item.kitDetails.essenceId, item.id, liveProd.stockHalf || 0);
+                                maxAvailableInDrawer = discrete.available1oz;
+                                if (item.kitDetails.isPlus) {
+                                  maxAvailableInDrawer = Math.min(maxAvailableInDrawer, discrete.availableHalfOz);
+                                }
+                                if (item.kitDetails.bottleId) {
+                                  const liveBottle = storedCatalog.find((p) => p.id === item.kitDetails?.bottleId);
+                                  if (liveBottle) {
+                                    const availBottle = getBottleAvailableStock(
+                                      typeof liveBottle.stock === 'number' ? liveBottle.stock : 0,
+                                      cart,
+                                      item.kitDetails.bottleId,
+                                      item.id
+                                    );
+                                    maxAvailableInDrawer = Math.min(maxAvailableInDrawer, availBottle);
+                                  }
+                                }
+                              } else if (isEssence) {
+                                const discrete = getEssenceDiscreteStock(totalStock, cart, prod.id, item.id, liveProd.stockHalf || 0);
+                                if (item.presentation === 'ONZA_COMPLETA') {
+                                  maxAvailableInDrawer = discrete.available1oz;
+                                } else if (item.presentation === 'MEDIA_ONZA') {
+                                  maxAvailableInDrawer = discrete.availableHalfOz;
+                                }
+                              } else {
+                                maxAvailableInDrawer = getBottleAvailableStock(totalStock, cart, prod.id, item.id);
+                              }
+
+                              const maxAllowedQty = Math.max(1, maxAvailableInDrawer);
+                              const canAddMoreInDrawer = item.quantity + 1 <= maxAvailableInDrawer;
+                              const displayValue =
+                                editingQtyMap[item.id] !== undefined ? editingQtyMap[item.id] : String(item.quantity);
+
+                              return (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setEditingQtyMap((prev) => {
+                                        if (prev[item.id] === undefined) return prev;
+                                        const next = { ...prev };
+                                        delete next[item.id];
+                                        return next;
+                                      });
+                                      updateQuantity(item.id, item.quantity - 1);
+                                    }}
+                                    className="w-4.5 h-4.5 rounded flex items-center justify-center text-slate-600 hover:bg-white font-bold cursor-pointer transition-colors"
+                                    aria-label="Disminuir una unidad"
+                                  >
+                                    <Minus className="w-2.5 h-2.5" />
+                                  </button>
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    value={displayValue}
+                                    onFocus={(e) => {
+                                      setEditingQtyMap((prev) => ({ ...prev, [item.id]: String(item.quantity) }));
+                                      e.target.select();
+                                    }}
+                                    onChange={(e) => {
+                                      const raw = e.target.value.replace(/\D/g, '');
+                                      if (raw === '') {
+                                        setEditingQtyMap((prev) => ({ ...prev, [item.id]: '' }));
+                                        return;
+                                      }
+                                      const parsed = parseInt(raw, 10);
+                                      if (isNaN(parsed)) return;
+                                      if (parsed === 0) {
+                                        setEditingQtyMap((prev) => ({ ...prev, [item.id]: '0' }));
+                                        return;
+                                      }
+                                      const clamped = Math.min(parsed, maxAllowedQty);
+                                      setEditingQtyMap((prev) => ({ ...prev, [item.id]: String(clamped) }));
+                                      if (clamped !== item.quantity) {
+                                        updateQuantity(item.id, clamped);
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      const draftVal = editingQtyMap[item.id];
+                                      setEditingQtyMap((prev) => {
+                                        const next = { ...prev };
+                                        delete next[item.id];
+                                        return next;
+                                      });
+                                      if (draftVal === '0') {
+                                        removeFromCart(item.id);
+                                      }
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        (e.target as HTMLInputElement).blur();
+                                      }
+                                    }}
+                                    title={`Editar cantidad (máx. ${maxAllowedQty} disponibles)`}
+                                    aria-label="Cantidad"
+                                    className="w-7 h-4.5 text-[11px] font-black text-center text-slate-800 bg-white rounded border border-slate-200/90 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none px-0.5 font-mono"
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      setEditingQtyMap((prev) => {
+                                        if (prev[item.id] === undefined) return prev;
+                                        const next = { ...prev };
+                                        delete next[item.id];
+                                        return next;
+                                      });
+                                      updateQuantity(item.id, item.quantity + 1);
+                                    }}
+                                    disabled={!canAddMoreInDrawer}
+                                    className={`w-4.5 h-4.5 rounded flex items-center justify-center font-bold transition-colors ${
+                                      canAddMoreInDrawer 
+                                        ? 'text-slate-600 hover:bg-white cursor-pointer' 
+                                        : 'text-slate-300 cursor-not-allowed opacity-40'
+                                    }`}
+                                    title={canAddMoreInDrawer ? "Aumentar una unidad" : "Inventario máximo alcanzado"}
+                                    aria-label="Aumentar una unidad"
+                                  >
+                                    <Plus className="w-2.5 h-2.5" />
+                                  </button>
+                                </>
+                              );
+                            })()}
+                          </div>
+
+                          {/* Precio alineado */}
+                          <div className="text-right min-w-[54px]">
+                            <div className="flex items-baseline justify-end gap-1">
+                              {item.originalUnitPrice && item.originalUnitPrice > item.unitPrice && (
+                                <span className="text-[9.5px] font-bold text-slate-400 line-through decoration-rose-500">
+                                  ${(item.originalUnitPrice * item.quantity).toFixed(2)}
+                                </span>
+                              )}
+                              <span className="text-xs font-black text-slate-900">
+                                ${item.totalPrice.toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -714,22 +699,22 @@ export default function CartDrawer() {
 
             {/* Aviso Importante de preparación de esencias con alcohol */}
             {cart.length > 0 && drawerStep === 'cart' && (
-              <div className="p-3 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-xs text-amber-950 space-y-1 mt-1 shadow-2xs">
-                <div className="flex items-center gap-1.5 font-bold text-amber-900 text-[11px]">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <div className="p-2.5 rounded-xl bg-amber-50/90 border border-amber-200/90 text-xs text-amber-950 space-y-0.5 mt-1 shadow-2xs">
+                <div className="flex items-center gap-1.5 font-bold text-amber-900 text-[10.5px]">
+                  <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
                   <span>Aviso importante: Mezcla con alcohol</span>
                 </div>
-                <p className="text-[10.5px] text-amber-900/90 font-medium leading-relaxed">
-                  Todas las esencias deben de ser mezcladas con alcohol para perfumería antes de cualquier aplicación. El máximo recomendado para 100ml es de una onza y una media onza, más de eso no es recomendado.
+                <p className="text-[10px] text-amber-900/90 font-medium leading-snug">
+                  Todas las esencias deben mezclarse con alcohol para perfumería antes de su aplicación (máx. recomendado para 100ml: 1.5 onzas).
                 </p>
               </div>
             )}
           </div>
 
-          {/* Footer del Carrito con Subtotal, Continuar a Insumos -> Pago Seguro y botón Seguir Comprando */}
+          {/* Footer compacto del Carrito */}
           {cart.length > 0 && (
-            <div className="p-3.5 sm:p-5 border-t border-slate-200/80 bg-white/95 backdrop-blur-sm space-y-2.5 shrink-0">
-              <div className="space-y-1.5 text-xs">
+            <div className="px-3.5 py-2.5 sm:px-4 sm:py-3 border-t border-slate-200/80 bg-white/95 backdrop-blur-sm space-y-1.5 shrink-0">
+              <div className="space-y-0.5 text-[11px]">
                 <div className="flex items-center justify-between text-slate-600 font-medium">
                   <span>Subtotal:</span>
                   <span className={discountTotal > 0 ? "font-bold text-slate-500 line-through" : "font-black text-slate-900"}>
@@ -752,26 +737,26 @@ export default function CartDrawer() {
                     <>
                       {halloweenDiscount > 0 && (
                         <div className="flex items-center justify-between text-purple-700 font-bold">
-                          <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Ahorro Promo Especial:</span>
+                          <span className="flex items-center gap-1"><Tag className="w-2.5 h-2.5" /> Ahorro Promo Especial:</span>
                           <span>-${halloweenDiscount.toFixed(2)}</span>
                         </div>
                       )}
                       {vipDiscount > 0 && (
                         <div className="flex items-center justify-between text-indigo-700 font-bold">
-                          <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Ahorro Nivel VIP:</span>
+                          <span className="flex items-center gap-1"><Tag className="w-2.5 h-2.5" /> Ahorro Nivel VIP:</span>
                           <span>-${vipDiscount.toFixed(2)}</span>
                         </div>
                       )}
                     </>
                   );
                 })()}
-                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                <div className="flex items-center justify-between text-[10.5px] text-slate-500">
                   <span>Envío a todo el país:</span>
                   <span className="text-emerald-700 font-bold">Calculado al pagar o Retiro Gratis</span>
                 </div>
-                <div className="flex items-center justify-between text-sm font-extrabold text-slate-900 pt-1.5 border-t border-slate-200/70">
+                <div className="flex items-center justify-between text-xs sm:text-sm font-extrabold text-slate-900 pt-1 border-t border-slate-200/70">
                   <span>Total estimado:</span>
-                  <span className="font-black text-indigo-700 text-base">${subtotal.toFixed(2)}</span>
+                  <span className="font-black text-indigo-700 text-sm sm:text-base">${subtotal.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -789,10 +774,10 @@ export default function CartDrawer() {
                     setUpsellSnapshotIds(currentIds);
                     setDrawerStep('upsell');
                   }}
-                  className="clay-btn clay-btn-primary w-full py-3 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-2 !shadow-[0_4px_16px_rgba(99,102,241,0.4)] tracking-wide cursor-pointer active:scale-95"
+                  className="clay-btn clay-btn-primary w-full py-2.5 text-xs font-black rounded-xl flex items-center justify-center gap-1.5 !shadow-[0_4px_14px_rgba(99,102,241,0.38)] tracking-wide cursor-pointer active:scale-95"
                 >
                   <span>Continuar</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               ) : (
                 <Link
@@ -803,10 +788,10 @@ export default function CartDrawer() {
                     }
                     setIsCartOpen(false);
                   }}
-                  className="clay-btn clay-btn-primary w-full py-3 text-xs sm:text-sm font-black rounded-xl flex items-center justify-center gap-2 !shadow-[0_4px_16px_rgba(99,102,241,0.4)] tracking-wide cursor-pointer active:scale-95"
+                  className="clay-btn clay-btn-primary w-full py-2.5 text-xs font-black rounded-xl flex items-center justify-center gap-1.5 !shadow-[0_4px_14px_rgba(99,102,241,0.38)] tracking-wide cursor-pointer active:scale-95"
                 >
                   <span>Proceder a pago seguro</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               )}
 
@@ -815,24 +800,24 @@ export default function CartDrawer() {
                 <button
                   type="button"
                   onClick={() => setDrawerStep('cart')}
-                  className="w-full py-2.5 rounded-xl text-xs font-black text-slate-700 bg-white hover:bg-slate-50 border-2 border-slate-200/80 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs active:scale-95"
+                  className="w-full py-1.5 rounded-xl text-[11px] font-black text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5 text-indigo-600" />
+                  <ArrowLeft className="w-3 h-3 text-indigo-600" />
                   <span>Volver a mi carrito</span>
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={() => setIsCartOpen(false)}
-                  className="w-full py-2.5 rounded-xl text-xs font-black text-slate-700 bg-white hover:bg-slate-50 border-2 border-slate-200/80 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs active:scale-95"
+                  className="w-full py-1.5 rounded-xl text-[11px] font-black text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5 text-indigo-600" />
+                  <ArrowLeft className="w-3 h-3 text-indigo-600" />
                   <span>Seguir Comprando (Agregar más)</span>
                 </button>
               )}
 
-              <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold text-slate-400 pt-0.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <div className="flex items-center justify-center gap-1 text-[9.5px] font-semibold text-slate-400">
+                <ShieldCheck className="w-3 h-3 text-emerald-500" />
                 <span>Entregas a domicilio a todo El Salvador o retiro en local</span>
               </div>
             </div>

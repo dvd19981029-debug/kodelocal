@@ -3639,8 +3639,13 @@ export function resetDatabaseToZeroStock(): ProductItem[] {
   return zeroStockProducts;
 }
 
+let memoryProductsCache: ProductItem[] | null = null;
+
 export function getStoredProducts(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
+  if (memoryProductsCache && memoryProductsCache.length >= 20) {
+    return memoryProductsCache;
+  }
   
   const currentVersion = localStorage.getItem('kodelocal_data_version');
   const saved = localStorage.getItem('kodelocal_products');
@@ -3652,6 +3657,7 @@ export function getStoredProducts(): ProductItem[] {
         if (currentVersion !== DATA_VERSION) {
           return resetDatabaseToInitialStock();
         }
+        memoryProductsCache = parsed;
         return parsed;
       }
     } catch (e) {}
@@ -3676,7 +3682,11 @@ export function checkAndMigrateToZeroStock(): boolean {
 
 export function saveStoredProducts(products: ProductItem[]): void {
   if (typeof window === 'undefined') return;
+  if (Array.isArray(products) && products.length > 0) {
+    memoryProductsCache = products;
+  }
   try {
+    localStorage.setItem('kodelocal_data_version', DATA_VERSION);
     localStorage.setItem('kodelocal_products', JSON.stringify(products));
   } catch (_) {}
   window.dispatchEvent(new Event('kodelocal_products_updated'));
