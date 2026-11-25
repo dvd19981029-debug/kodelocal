@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck, AlertTriangle, Tag } from 'lucide-react';
-import { useEcommerceCart, getEssenceDiscreteStock, getBottleAvailableStock } from '@/context/EcommerceCartContext';
-import { getStoredProducts } from '@/lib/store';
+import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, ShieldCheck, AlertTriangle, Tag, Sparkles } from 'lucide-react';
+import { useEcommerceCart, getEssenceDiscreteStock, getBottleAvailableStock, applyCustomerProductPricing } from '@/context/EcommerceCartContext';
+import { useCustomerAuth } from '@/context/CustomerAuthContext';
+import { getStoredProducts, ProductItem } from '@/lib/store';
 import { trackMetaInitiateCheckout } from '@/components/analytics/MarketingScripts';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
@@ -13,6 +14,7 @@ import { isHalloweenPromoProduct } from '@/lib/halloweenPromo';
 export default function CartDrawer() {
   const { 
     cart, 
+    addToCart,
     isCartOpen, 
     setIsCartOpen, 
     updateQuantity, 
@@ -23,8 +25,176 @@ export default function CartDrawer() {
     discountTotal,
     totalItems
   } = useEcommerceCart();
+  const { customer } = useCustomerAuth();
 
   const [editingQtyMap, setEditingQtyMap] = React.useState<Record<string, string>>({});
+
+  // Motor inteligente de cross-sell tipo PedidosYa ("Otros clientes también compraron")
+  // Detecta qué lleva el cliente (esencia, bote, alcohol, embudo, piseta, fijador, caja) y sugiere lo que le falta
+  const missingSuppliesRecs = useMemo(() => {
+    if (!isCartOpen || cart.length === 0 || typeof window === 'undefined') {
+      return { subtitle: '', items: [] as Array<{ product: ProductItem; tag: string; price: number; originalPrice: number }> };
+    }
+
+    const catalog = getStoredProducts() || [];
+    if (catalog.length === 0) {
+      return { subtitle: '', items: [] };
+    }
+
+    const inCartIds = new Set<string>();
+    let hasLooseEssence = false;
+    let hasBottle = false;
+    let hasAlcohol = false;
+    let hasEmbudo = false;
+    let hasPiseta = false;
+    let hasFijador = false;
+    let hasCaja = false;
+
+    for (const item of cart) {
+      const pid = String(item.product?.id || '').toLowerCase();
+      const pname = String(item.product?.name || '').toLowerCase();
+      const poff = String(item.product?.officialName || '').toLowerCase();
+      const pcat = String(item.product?.category || '');
+
+      if (item.product?.id) inCartIds.add(item.product.id);
+      if (item.selectedBottle?.id) {
+        inCartIds.add(item.selectedBottle.id);
+        hasBottle = true;
+      }
+      if (item.kitDetails?.bottleId) {
+        inCartIds.add(item.kitDetails.bottleId);
+      }
+
+      if (!item.kitDetails && pcat === 'Esencias para Perfume') {
+        hasLooseEssence = true;
+      }
+      if (pcat === 'Botes' || pname.includes('bote ') || pname.includes('frasco')) {
+        hasBottle = true;
+      }
+      if (pid.includes('alcohol') || pname.includes('alcohol') || poff.includes('alcohol')) {
+        hasAlcohol = true;
+      }
+      if (pid.includes('embudo') || pname.includes('embudo') || poff.includes('embudo')) {
+        hasEmbudo = true;
+      }
+      if (pid.includes('piseta') || pname.includes('piseta') || poff.includes('piseta')) {
+        hasPiseta = true;
+      }
+      if (
+        pid.includes('galaxolide') ||
+        pid.includes('dipropilenglicol') ||
+        pname.includes('galaxolide') ||
+        pname.includes('dipropilenglicol') ||
+        poff.includes('fijador')
+      ) {
+        hasFijador = true;
+      }
+      if (pid.includes('caja-carton') || pname.includes('caja de cartón') || poff.includes('caja minimalista')) {
+        hasCaja = true;
+      }
+    }
+
+    const isEligible = (p: ProductItem) => {
+      if (!p || !p.id || inCartIds.has(p.id)) return false;
+      if (p.isAvailableOnline === false) return false;
+      const avail = getBottleAvailableStock(Number(p.stock || 0), cart, p.id);
+      return avail > 0;
+    };
+
+    const availableSupplies = catalog.filter(
+      (p) => p.category === 'Insumos y Materia Prima' && isEligible(p)
+    );
+    const availableBottles = catalog
+      .filter((p) => p.category === 'Botes' && isEligible(p))
+      .sort((a, b) => Number(b.stock || 0) - Number(a.stock || 0));
+
+    const findSupply = (matcher: (p: ProductItem) => boolean) =>
+      availableSupplies.filter(matcher);
+
+    const alcoholItems = findSupply((p) =>
+      `${p.id} ${p.name} ${p.officialName || ''}`.toLowerCase().includes('alcohol')
+    );
+    const embudoItems = findSupply((p) =>
+      `${p.id} ${p.name} ${p.officialName || ''}`.toLowerCase().includes('embudo')
+    );
+    const pisetaItems = findSupply((p) =>
+      `${p.id} ${p.name} ${p.officialName || ''}`.toLowerCase().includes('piseta')
+    );
+    const fijadorItems = findSupply((p) => {
+      const s = `${p.id} ${p.name} ${p.officialName || ''}`.toLowerCase();
+      return s.includes('galaxolide') || s.includes('dipropilenglicol') || s.includes('fijador') && !s.includes('alcohol');
+    });
+    const cajaItems = findSupply((p) =>
+      `${p.id} ${p.name} ${p.officialName || ''}`.toLowerCase().includes('caja')
+    );
+
+    const ordered: Array<{ product: ProductItem; tag: string }> = [];
+    const seen = new Set<string>();
+    const pushUnique = (list: ProductItem[], tag: string, maxCount = 2) => {
+      let count = 0;
+      for (const prod of list) {
+        if (seen.has(prod.id)) continue;
+        seen.add(prod.id);
+        ordered.push({ product: prod, tag });
+        count++;
+        if (count >= maxCount) break;
+      }
+    };
+
+    // Si lleva esencia suelta pero NO lleva frasco todavía: priorizar Frascos 100ml + Alcohol + Embudo + Piseta + Fijador
+    if (hasLooseEssence && !hasBottle) {
+      pushUnique(availableBottles, 'Frasco 100ml', 2);
+      if (!hasAlcohol) pushUnique(alcoholItems, 'Para tu mezcla', 2);
+      if (!hasEmbudo) pushUnique(embudoItems, 'Indispensable', 1);
+      if (!hasFijador) pushUnique(fijadorItems, 'Mayor fijación', 2);
+      if (!hasPiseta) pushUnique(pisetaItems, 'Para dosificar', 1);
+      if (!hasCaja) pushUnique(cajaItems, 'Empaque', 1);
+    }
+    // Si lleva esencia y frasco (o lleva frasco suelto): priorizar Alcohol + Embudo + Piseta + Fijador + Caja
+    else if ((hasLooseEssence && hasBottle) || hasBottle) {
+      if (!hasAlcohol) pushUnique(alcoholItems, 'Falta tu alcohol', 2);
+      if (!hasEmbudo) pushUnique(embudoItems, 'Para envasar', 1);
+      if (!hasPiseta) pushUnique(pisetaItems, 'Para dosificar', 1);
+      if (!hasFijador) pushUnique(fijadorItems, 'Mayor fijación', 2);
+      if (!hasCaja) pushUnique(cajaItems, 'Empaque', 1);
+      pushUnique(availableBottles, 'Otro frasco', 1);
+    }
+    // Cualquier otro caso (lleva kit o insumos): sugerir los insumos/frascos que aún no tenga en el carrito
+    else {
+      if (!hasAlcohol) pushUnique(alcoholItems, 'Para tu mezcla', 2);
+      if (!hasEmbudo) pushUnique(embudoItems, 'Para envasar', 1);
+      if (!hasFijador) pushUnique(fijadorItems, 'Mayor fijación', 2);
+      if (!hasPiseta) pushUnique(pisetaItems, 'Para dosificar', 1);
+      pushUnique(availableBottles, 'Frasco 100ml', 2);
+      if (!hasCaja) pushUnique(cajaItems, 'Empaque', 1);
+    }
+
+    // Completar con cualquier otro insumo disponible que no esté en el carrito
+    pushUnique(availableSupplies, 'Complemento', 4);
+
+    let subtitle = 'Completa tu pedido con los insumos que te faltan';
+    if (hasLooseEssence && !hasBottle && !hasAlcohol) {
+      subtitle = 'Llevas esencia: agrega tu frasco, alcohol y embudo';
+    } else if (hasLooseEssence && hasBottle && !hasAlcohol) {
+      subtitle = 'Ya llevas esencia y bote: agrega alcohol, embudo o piseta';
+    } else if (hasLooseEssence && hasAlcohol && !hasBottle) {
+      subtitle = 'Ya llevas esencia y alcohol: elige tu frasco y embudo';
+    } else if (hasLooseEssence && hasBottle && hasAlcohol) {
+      subtitle = 'Agrega embudo, piseta o fijador extra para tu preparación';
+    }
+
+    const pricedItems = ordered.slice(0, 6).map(({ product, tag }) => {
+      const pricing = applyCustomerProductPricing(Number(product.price || 0), product, 'UNIDAD', customer);
+      return {
+        product,
+        tag,
+        price: pricing.price,
+        originalPrice: pricing.originalPrice,
+      };
+    });
+
+    return { subtitle, items: pricedItems };
+  }, [isCartOpen, cart, customer]);
 
   // Bloquear el scroll de fondo mientras el carrito esté abierto
   useEffect(() => {
@@ -377,6 +547,99 @@ export default function CartDrawer() {
                   </div>
                 );
               })
+            )}
+
+            {/* Carrusel / Lista tipo PedidosYa: "Otros clientes también compraron" (Insumos y botes faltantes) */}
+            {cart.length > 0 && missingSuppliesRecs.items.length > 0 && (
+              <div className="mt-2 p-3 rounded-2xl bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/80 border border-indigo-200/80 shadow-2xs space-y-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                      <h4 className="text-xs font-black text-slate-900 leading-tight">
+                        Otros clientes también compraron
+                      </h4>
+                    </div>
+                    <p className="text-[10.5px] font-semibold text-indigo-700/90 mt-0.5">
+                      {missingSuppliesRecs.subtitle}
+                    </p>
+                  </div>
+                  <span className="text-[9.5px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 shrink-0">
+                    +{missingSuppliesRecs.items.length} sugeridos
+                  </span>
+                </div>
+
+                <div className="flex gap-2.5 overflow-x-auto pb-1.5 pt-0.5 snap-x snap-mandatory scrollbar-thin">
+                  {missingSuppliesRecs.items.map(({ product, tag, price, originalPrice }) => {
+                    const recImg = getProductImage(product);
+                    const recTitle = formatPerfumeDisplayName(product);
+
+                    return (
+                      <div
+                        key={product.id}
+                        className="snap-start shrink-0 w-[142px] bg-white rounded-xl border border-slate-200/90 p-2 flex flex-col justify-between gap-1.5 shadow-2xs hover:border-indigo-300 transition-all"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-1 mb-1">
+                            <span className="text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-100/90 text-amber-900 truncate">
+                              {tag}
+                            </span>
+                            <span className="text-[9px] font-bold text-slate-400 truncate">
+                              {product.unit || 'Unidad'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-50 border border-slate-200/70 shrink-0 flex items-center justify-center">
+                              <img
+                                src={recImg}
+                                alt={recTitle}
+                                loading="lazy"
+                                decoding="async"
+                                onError={(e) => {
+                                  e.currentTarget.src = '/images/essence_bottle_blank.webp';
+                                }}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p
+                                className="text-[10.5px] font-black text-slate-900 leading-tight line-clamp-2"
+                                title={recTitle}
+                              >
+                                {recTitle}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 mt-0.5">
+                          <div className="flex flex-col">
+                            {originalPrice > price && (
+                              <span className="text-[9px] font-bold text-slate-400 line-through leading-none">
+                                ${originalPrice.toFixed(2)}
+                              </span>
+                            )}
+                            <span className="text-xs font-black text-indigo-700 leading-tight">
+                              ${price.toFixed(2)}
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => addToCart(product, 'UNIDAD', 1)}
+                            className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-[10px] font-black flex items-center gap-0.5 transition-all cursor-pointer shadow-2xs"
+                            title={`Agregar ${recTitle} al carrito`}
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Agregar</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             )}
 
             {/* Aviso Importante de preparación de esencias con alcohol */}
