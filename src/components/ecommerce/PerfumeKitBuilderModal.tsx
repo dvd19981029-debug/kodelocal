@@ -50,15 +50,23 @@ export default function PerfumeKitBuilderModal({
   // Estados de configuración del perfume
   const [selectedEssence, setSelectedEssence] = useState<ProductItem | null>(null);
 
+  const appliedInitialEssenceRef = useRef<string | null>(null);
+
   // Preseleccionar la esencia si se recibe initialEssenceId con stock disponible
   useEffect(() => {
-    if (initialEssenceId && availableEssences && availableEssences.length > 0) {
+    if (!initialEssenceId) {
+      appliedInitialEssenceRef.current = null;
+      return;
+    }
+    if (appliedInitialEssenceRef.current === String(initialEssenceId)) return;
+    if (availableEssences && availableEssences.length > 0) {
       const found = availableEssences.find(
         (e) => String(e.id) === String(initialEssenceId) || String(e.sku) === String(initialEssenceId)
       );
       if (found) {
         const stockInfo = getEssenceDiscreteStock(found.stock || 0, cart, found.id, undefined, found.stockHalf || 0);
         if (stockInfo.available1oz > 0) {
+          appliedInitialEssenceRef.current = String(initialEssenceId);
           setSelectedEssence(found);
           setCurrentStep(2);
         }

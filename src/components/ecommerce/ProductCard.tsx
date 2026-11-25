@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Check, Sparkles, Plus, Minus } from 'lucide-react';
+import { ShoppingBag, Check, Sparkles, Plus, Minus, Wand2, ChevronRight } from 'lucide-react';
 import { ProductItem, INITIAL_PRODUCTS } from '@/lib/store';
 import { useEcommerceCart, getPresentationsForProduct, ProductPresentation, getEssenceDiscreteStock, getBottleAvailableStock } from '@/context/EcommerceCartContext';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
@@ -11,6 +11,8 @@ import { getInspiracionPerfumeName, formatPerfumeDisplayName, getBottleLabelConf
 import { getProductUrl } from '@/lib/productUrl';
 import {
   isHalloweenPromoProduct,
+  isHalloweenSeasonActive,
+  BLACK_WEEK_KIT_BASE_PRICE,
   getActivePromoCampaignName,
   HALLOWEEN_ORIGINAL_PRICE_1OZ,
   HALLOWEEN_ORIGINAL_PRICE_HALF_OZ,
@@ -22,10 +24,11 @@ interface ProductCardProps {
   product: ProductItem;
   availableBottles?: ProductItem[];
   priority?: boolean;
+  onBuildPerfume?: (product: ProductItem) => void;
 }
 
-function ProductCardComponent({ product, priority = false }: ProductCardProps) {
-  const { cart, addToCart, updateQuantity } = useEcommerceCart();
+function ProductCardComponent({ product, priority = false, onBuildPerfume }: ProductCardProps) {
+  const { cart, addToCart, updateQuantity, kitConfig } = useEcommerceCart();
   const { customer } = useCustomerAuth();
   const presentations = getPresentationsForProduct(product, customer);
   const isHalloweenPromo = isHalloweenPromoProduct(product);
@@ -567,11 +570,38 @@ function ProductCardComponent({ product, priority = false }: ProductCardProps) {
             )}
           </div>
 
-          {/* Disponibilidad de retiro o envío */}
-          <div className="mt-1.5 text-center">
-            <span className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-medium tracking-tight block">
-              Retiro en local o envíos a todo El Salvador
-            </span>
+          {/* Acceso rápido 1 clic a "Arma tu Perfume 100ml" en tarjetas de Esencias, o disponibilidad de envío en el resto */}
+          <div className="mt-1.5">
+            {isEssence && (discreteStock?.available1oz ?? 0) >= 1 ? (
+              onBuildPerfume ? (
+                <button
+                  type="button"
+                  onClick={() => onBuildPerfume(product)}
+                  className="w-full py-1 px-2 rounded-lg bg-purple-50/90 hover:bg-purple-100/90 border border-purple-200/80 text-purple-800 hover:text-purple-950 transition-all flex items-center justify-center gap-1 cursor-pointer group/kit"
+                >
+                  <Wand2 className="w-3 h-3 text-amber-500 shrink-0" />
+                  <span className="text-[9.5px] sm:text-[10.5px] font-extrabold tracking-tight truncate">
+                    ¿En perfume 100ml? Ármalo (${(isHalloweenSeasonActive() ? BLACK_WEEK_KIT_BASE_PRICE : (kitConfig?.basePrice ?? 10)).toFixed(0)})
+                  </span>
+                  <ChevronRight className="w-3 h-3 text-purple-600 shrink-0 group-hover/kit:translate-x-0.5 transition-transform" />
+                </button>
+              ) : (
+                <Link
+                  href={`/?categoria=Arma+tu+perfume&essenceId=${product.id}#seccion-arma-tu-perfume`}
+                  className="w-full py-1 px-2 rounded-lg bg-purple-50/90 hover:bg-purple-100/90 border border-purple-200/80 text-purple-800 hover:text-purple-950 transition-all flex items-center justify-center gap-1 cursor-pointer group/kit"
+                >
+                  <Wand2 className="w-3 h-3 text-amber-500 shrink-0" />
+                  <span className="text-[9.5px] sm:text-[10.5px] font-extrabold tracking-tight truncate">
+                    ¿En perfume 100ml? Ármalo (${(isHalloweenSeasonActive() ? BLACK_WEEK_KIT_BASE_PRICE : (kitConfig?.basePrice ?? 10)).toFixed(0)})
+                  </span>
+                  <ChevronRight className="w-3 h-3 text-purple-600 shrink-0 group-hover/kit:translate-x-0.5 transition-transform" />
+                </Link>
+              )
+            ) : (
+              <span className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-medium tracking-tight block text-center">
+                Retiro en local o envíos a todo El Salvador
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -586,7 +616,8 @@ const ProductCard = React.memo(ProductCardComponent, (prev, next) => {
     prev.product.stockHalf === next.product.stockHalf &&
     prev.product.price === next.product.price &&
     prev.product.priceHalfOunce === next.product.priceHalfOunce &&
-    prev.priority === next.priority
+    prev.priority === next.priority &&
+    prev.onBuildPerfume === next.onBuildPerfume
   );
 });
 

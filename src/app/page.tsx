@@ -605,8 +605,9 @@ export default function EcommerceHomePage() {
     );
   };
 
-  const handleSelectCategory = (cat: string) => {
+  const handleSelectCategory = (cat: string, preselectedEssenceId?: string | null) => {
     setSelectedCategory(cat);
+    setInitialEssenceId(preselectedEssenceId ?? null);
     setOnlyNewArrivals(false);
     if (cat === 'Botes' || cat === 'Insumos' || cat === 'Arma tu perfume') {
       setSelectedGender('Todos');
@@ -616,9 +617,20 @@ export default function EcommerceHomePage() {
 
     // Centrar y alinear suavemente según el contenido de la página
     setTimeout(() => {
+      if (cat === 'Arma tu perfume') {
+        const el = document.getElementById('seccion-arma-tu-perfume');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 40);
   };
+
+  const handleBuildPerfumeFromCard = React.useCallback((essenceProduct: ProductItem) => {
+    handleSelectCategory('Arma tu perfume', essenceProduct.id);
+  }, []);
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-16">
@@ -948,7 +960,12 @@ export default function EcommerceHomePage() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 sm:gap-x-4 md:gap-x-5 gap-y-10 sm:gap-y-12">
                 {paginatedProducts.map((prod, idx) => (
-                  <ProductCard key={prod.id} product={prod} priority={currentPage === 1 && idx < 2} />
+                  <ProductCard
+                    key={prod.id}
+                    product={prod}
+                    priority={currentPage === 1 && idx < 2}
+                    onBuildPerfume={handleBuildPerfumeFromCard}
+                  />
                 ))}
               </div>
             )}
