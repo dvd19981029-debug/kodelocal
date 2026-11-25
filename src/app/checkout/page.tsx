@@ -2310,20 +2310,24 @@ export default function CheckoutPage() {
                   {discountTotal > 0 &&
                     (() => {
                       const hasHalloweenItems = cart.some(
-                        (it) => !it.kitDetails && isHalloweenPromoProduct(it.product)
+                        (it) =>
+                          (!it.kitDetails && isHalloweenPromoProduct(it.product)) ||
+                          (it.kitDetails && isHalloweenSeasonActive())
                       );
                       const hasVipItems = cart.some((it) => {
                         const orig = it.originalUnitPrice ?? it.unitPrice;
                         return (
                           orig > it.unitPrice &&
-                          (it.kitDetails || !isHalloweenPromoProduct(it.product))
+                          !it.kitDetails &&
+                          !isHalloweenPromoProduct(it.product)
                         );
                       });
+                      const activeCampaignName = getActivePromoCampaignName();
                       const savingsLabel =
                         hasHalloweenItems && hasVipItems
-                          ? 'Ahorro aplicado (Promo + Nivel VIP)'
+                          ? `Ahorro aplicado (${activeCampaignName} + Nivel VIP)`
                           : hasHalloweenItems
-                          ? 'Ahorro aplicado con Promo Halloween'
+                          ? `Ahorro aplicado con Promo ${activeCampaignName}`
                           : `Ahorro aplicado (${
                               customer?.tier?.name ||
                               customer?.bottleTier?.name ||

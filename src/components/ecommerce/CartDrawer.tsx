@@ -10,7 +10,7 @@ import { useLiveProducts } from '@/hooks/useLiveProducts';
 import { trackMetaInitiateCheckout } from '@/components/analytics/MarketingScripts';
 import { getProductImage } from '@/lib/perfumeImages';
 import { getInspiracionPerfumeName, formatPerfumeDisplayName } from '@/lib/perfumeNames';
-import { isHalloweenPromoProduct } from '@/lib/halloweenPromo';
+import { isHalloweenPromoProduct, isHalloweenSeasonActive, getActivePromoCampaignName } from '@/lib/halloweenPromo';
 
 export default function CartDrawer() {
   const { 
@@ -727,17 +727,21 @@ export default function CartDrawer() {
                   for (const it of cart) {
                     const orig = it.originalUnitPrice ?? it.unitPrice;
                     const itemDisc = Number((Math.max(0, orig - it.unitPrice) * it.quantity).toFixed(2));
-                    if (!it.kitDetails && isHalloweenPromoProduct(it.product)) {
+                    if (
+                      (!it.kitDetails && isHalloweenPromoProduct(it.product)) ||
+                      (it.kitDetails && isHalloweenSeasonActive())
+                    ) {
                       halloweenDiscount = Number((halloweenDiscount + itemDisc).toFixed(2));
                     } else {
                       vipDiscount = Number((vipDiscount + itemDisc).toFixed(2));
                     }
                   }
+                  const activeCampaignName = getActivePromoCampaignName();
                   return (
                     <>
                       {halloweenDiscount > 0 && (
                         <div className="flex items-center justify-between text-purple-700 font-bold">
-                          <span className="flex items-center gap-1"><Tag className="w-2.5 h-2.5" /> Ahorro Promo Especial:</span>
+                          <span className="flex items-center gap-1"><Tag className="w-2.5 h-2.5" /> Ahorro {activeCampaignName}:</span>
                           <span>-${halloweenDiscount.toFixed(2)}</span>
                         </div>
                       )}

@@ -272,7 +272,7 @@ export function buildMetaCatalogRows(
       const collectionLabel = isDiscontinued
         ? 'Descontinuado'
         : isPromo
-        ? 'Promo Halloween $3.30'
+        ? 'Promo Black Week $3.40'
         : isIncoming
         ? 'Nuevos Ingresos En Camino'
         : BEST_SELLER_SKUS.has(String(p.sku))
