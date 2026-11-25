@@ -665,7 +665,11 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
             ? Number((regularBaseKit + kitConfig.extraShotPrice).toFixed(2))
             : regularBaseKit;
 
-          if (isHalloweenSeasonActive()) {
+          const isEssencePromo = liveEssence
+            ? isHalloweenPromoProduct(liveEssence)
+            : (item.unitPrice === BLACK_WEEK_KIT_BASE_PRICE || item.unitPrice === BLACK_WEEK_KIT_EXTRASHOT_TOTAL_PRICE);
+
+          if (isHalloweenSeasonActive() && isEssencePromo) {
             const promoKitPrice = isPlusKit ? BLACK_WEEK_KIT_EXTRASHOT_TOTAL_PRICE : BLACK_WEEK_KIT_BASE_PRICE;
             if (item.unitPrice !== promoKitPrice || item.originalUnitPrice !== regularRawKit) {
               changed = true;
@@ -899,8 +903,8 @@ export function EcommerceCartProvider({ children }: { children: React.ReactNode 
     const liveEssence = storedCatalog.find((p) => p.id === essence.id) || essence;
     const liveBottle = storedCatalog.find((p) => p.id === bottle.id) || bottle;
 
-    // Precio dinámico: base + extra shot si seleccionó PLUS (con tarifa fija Black Week si la temporada está activa)
-    const isBlackWeekKitPromo = isHalloweenSeasonActive();
+    // Precio dinámico: base + extra shot si seleccionó PLUS (con tarifa fija Black Week solo si la esencia entra en promoción)
+    const isBlackWeekKitPromo = isHalloweenSeasonActive() && isHalloweenPromoProduct(liveEssence);
     const regularBaseKitPrice = liveEssence.finishedPerfumePrice != null ? Number(liveEssence.finishedPerfumePrice) : kitConfig.basePrice;
     const regularExtraShotPrice = kitConfig.extraShotPrice;
     const regularRawKitPrice = isPlus ? Number((regularBaseKitPrice + regularExtraShotPrice).toFixed(2)) : regularBaseKitPrice;

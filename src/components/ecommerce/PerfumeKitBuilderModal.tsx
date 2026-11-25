@@ -21,6 +21,7 @@ import { getInspiracionPerfumeName, formatPerfumeDisplayName, isNewEssence } fro
 import { getProductImage } from '@/lib/perfumeImages';
 import {
   isHalloweenSeasonActive,
+  isHalloweenPromoProduct,
   BLACK_WEEK_KIT_BASE_PRICE,
   BLACK_WEEK_KIT_EXTRASHOT_ADDON,
 } from '@/lib/halloweenPromo';
@@ -211,7 +212,7 @@ export default function PerfumeKitBuilderModal({
     }
   }, [hasHalfOzAvailable, isPlus]);
 
-  const isBlackWeekPromo = isHalloweenSeasonActive();
+  const isBlackWeekPromo = isHalloweenSeasonActive() && (!selectedEssence || isHalloweenPromoProduct(selectedEssence));
   const regularBasePrice = selectedEssence?.finishedPerfumePrice != null 
     ? Number(selectedEssence.finishedPerfumePrice) 
     : (kitConfig?.basePrice ?? 15.00);

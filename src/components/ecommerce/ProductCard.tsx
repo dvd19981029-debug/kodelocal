@@ -581,7 +581,7 @@ function ProductCardComponent({ product, priority = false, onBuildPerfume }: Pro
                 >
                   <Wand2 className="w-3 h-3 text-amber-500 shrink-0" />
                   <span className="text-[9.5px] sm:text-[10.5px] font-extrabold tracking-tight truncate">
-                    ¿En perfume 100ml? Ármalo (${(isHalloweenSeasonActive() ? BLACK_WEEK_KIT_BASE_PRICE : (kitConfig?.basePrice ?? 10)).toFixed(0)})
+                    ¿En perfume 100ml? Ármalo (${(isHalloweenPromo ? BLACK_WEEK_KIT_BASE_PRICE : (product.finishedPerfumePrice != null ? Number(product.finishedPerfumePrice) : (kitConfig?.basePrice ?? 10))).toFixed(0)})
                   </span>
                   <ChevronRight className="w-3 h-3 text-purple-600 shrink-0 group-hover/kit:translate-x-0.5 transition-transform" />
                 </button>
@@ -592,7 +592,7 @@ function ProductCardComponent({ product, priority = false, onBuildPerfume }: Pro
                 >
                   <Wand2 className="w-3 h-3 text-amber-500 shrink-0" />
                   <span className="text-[9.5px] sm:text-[10.5px] font-extrabold tracking-tight truncate">
-                    ¿En perfume 100ml? Ármalo (${(isHalloweenSeasonActive() ? BLACK_WEEK_KIT_BASE_PRICE : (kitConfig?.basePrice ?? 10)).toFixed(0)})
+                    ¿En perfume 100ml? Ármalo (${(isHalloweenPromo ? BLACK_WEEK_KIT_BASE_PRICE : (product.finishedPerfumePrice != null ? Number(product.finishedPerfumePrice) : (kitConfig?.basePrice ?? 10))).toFixed(0)})
                   </span>
                   <ChevronRight className="w-3 h-3 text-purple-600 shrink-0 group-hover/kit:translate-x-0.5 transition-transform" />
                 </Link>

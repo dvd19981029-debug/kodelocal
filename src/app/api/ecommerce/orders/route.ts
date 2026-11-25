@@ -1314,7 +1314,7 @@ export async function POST(request: Request) {
           const bottleProd = parsedKit.bottleId ? productMap.get(parsedKit.bottleId) : undefined;
 
           const targetProductId = essenceProd.id;
-          const isBlackWeekKitPromo = isHalloweenSeasonActive();
+          const isBlackWeekKitPromo = isHalloweenSeasonActive() && isHalloweenPromoProduct(essenceProd);
           let baseKitPrice = isBlackWeekKitPromo ? BLACK_WEEK_KIT_BASE_PRICE : dynamicKitBasePrice;
           if (!isBlackWeekKitPromo && essenceProd.finishedPerfumePrice != null) {
             baseKitPrice = Number(essenceProd.finishedPerfumePrice);
