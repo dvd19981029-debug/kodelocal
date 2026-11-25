@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyStaffInternalToken } from '@/lib/customerAuthToken';
 import { prisma } from '@/lib/prisma';
-import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
+import { isHalloweenPromoProduct, POS_PROMO_PRICE_1OZ } from '@/lib/halloweenPromo';
 import { buildCustomerLookupOrConditions, consolidateCustomerDiscounts, isFixedPriceEssence } from '@/lib/customerDiscounts';
 
 export const dynamic = 'force-dynamic';
@@ -291,15 +291,9 @@ export async function POST(request: Request) {
           prod.id === 'ENVIO-DOM' ||
           prod.unit === 'Servicio';
 
-        const isHalloweenPromo = false; // Black Week es exclusivo de Ecommerce
+        const isHalloweenPromo = isEssence && it.presentation !== 'MEDIA_ONZA' && isHalloweenPromoProduct(prod);
         const isFixedEssence = isEssence && isFixedPriceEssence(prod);
-        if (isHalloweenPromo) {
-          const promoPrice =
-            it.presentation === 'MEDIA_ONZA' ? HALLOWEEN_PROMO_PRICE_HALF_OZ : HALLOWEEN_PROMO_PRICE_1OZ;
-          if (promoPrice < unitPrice) {
-            unitPrice = promoPrice;
-          }
-        } else if (isFixedEssence) {
+        if (isFixedEssence) {
           if (catalogListPrice != null && catalogListPrice > 0) {
             unitPrice = catalogListPrice;
           }
@@ -357,6 +351,9 @@ export async function POST(request: Request) {
 
           if (customerDiscountedPrice > 0 && customerDiscountedPrice < unitPrice) {
             unitPrice = customerDiscountedPrice;
+          }
+          if (isHalloweenPromo && POS_PROMO_PRICE_1OZ < unitPrice) {
+            unitPrice = POS_PROMO_PRICE_1OZ;
           }
         }
       }

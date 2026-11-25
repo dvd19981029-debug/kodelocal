@@ -3,7 +3,7 @@ import { Search, Barcode, Sparkles, Edit3, Plus, Check, Wand2 } from 'lucide-rea
 import { ProductItem, CartItem } from '@/lib/store';
 import { getProductImage } from '@/lib/perfumeImages';
 import { isIncomingEssence } from '@/lib/perfumeNames';
-import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
+import { isHalloweenPromoProduct, POS_PROMO_PRICE_1OZ } from '@/lib/halloweenPromo';
 import { isFixedPriceEssence } from '@/lib/customerDiscounts';
 
 export interface PosProductGridProps {
@@ -243,16 +243,14 @@ export const PosProductGrid: React.FC<PosProductGridProps> = ({
           const isOutOfStock = isEssence ? (product.stock <= 0 && stockHalfBottles <= 0) : product.stock <= 0;
           const isLowStock = product.stock > 0 && product.stock <= product.minStock;
           const availableRemaining = isEssence ? fullRemaining + halfRemaining : Math.max(0, product.stock - cartFullForProduct);
-          const isHalloweenPromo = false; // Black Week es exclusivo de Ecommerce
+          const isHalloweenPromo = isEssence && isHalloweenPromoProduct(product);
           const isFixedEssence = isEssence && isFixedPriceEssence(product);
           const fullPrice = isHalloweenPromo
-            ? HALLOWEEN_PROMO_PRICE_1OZ
+            ? (customEssencePrice != null ? Math.min(POS_PROMO_PRICE_1OZ, customEssencePrice) : POS_PROMO_PRICE_1OZ)
             : isFixedEssence
             ? product.price
             : (customEssencePrice != null ? customEssencePrice : product.price);
-          const halfPrice = isHalloweenPromo
-            ? HALLOWEEN_PROMO_PRICE_HALF_OZ
-            : isFixedEssence
+          const halfPrice = isFixedEssence
             ? (product.priceHalfOunce != null
               ? Number(product.priceHalfOunce)
               : Number((product.price / 2).toFixed(2)))

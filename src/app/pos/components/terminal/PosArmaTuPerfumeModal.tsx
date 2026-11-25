@@ -5,6 +5,12 @@ import { X, Search, Check, Wand2, Plus, Minus, Sparkles, Tag, Droplets } from 'l
 import { ProductItem, CartItem } from '@/lib/store';
 import { formatPerfumeDisplayName, getInspiracionPerfumeName } from '@/lib/perfumeNames';
 import { getProductImage } from '@/lib/perfumeImages';
+import {
+  isHalloweenSeasonActive,
+  isHalloweenPromoProduct,
+  BLACK_WEEK_KIT_BASE_PRICE,
+  BLACK_WEEK_KIT_EXTRASHOT_ADDON,
+} from '@/lib/halloweenPromo';
 
 export interface PosArmaTuPerfumeModalProps {
   isOpen: boolean;
@@ -174,12 +180,18 @@ export const PosArmaTuPerfumeModal: React.FC<PosArmaTuPerfumeModalProps> = ({
 
   if (!isOpen) return null;
 
-  const baseKitPrice =
+  const isBlackWeekPromo =
+    isHalloweenSeasonActive() && (!selectedEssence || isHalloweenPromoProduct(selectedEssence));
+  const regularBaseKitPrice =
     selectedEssence?.finishedPerfumePrice != null
       ? Number(selectedEssence.finishedPerfumePrice)
       : kitConfig.basePrice;
+  const baseKitPrice = isBlackWeekPromo ? BLACK_WEEK_KIT_BASE_PRICE : regularBaseKitPrice;
+  const effectiveExtraShotPrice = isBlackWeekPromo
+    ? BLACK_WEEK_KIT_EXTRASHOT_ADDON
+    : kitConfig.extraShotPrice;
   const unitPrice = isPlus
-    ? Number((baseKitPrice + kitConfig.extraShotPrice).toFixed(2))
+    ? Number((baseKitPrice + effectiveExtraShotPrice).toFixed(2))
     : baseKitPrice;
   const lineTotal = Number((unitPrice * quantity).toFixed(2));
   const canSubmit = Boolean(selectedEssence && selectedBottle && maxKits >= 1 && quantity >= 1);
@@ -274,7 +286,12 @@ export const PosArmaTuPerfumeModal: React.FC<PosArmaTuPerfumeModalProps> = ({
                 const avail = getEssenceAvailableInPos(ess);
                 const disabled = avail.available1oz <= 0;
                 const isSelected = selectedEssence?.id === ess.id;
-                const kitBase = ess.finishedPerfumePrice != null ? Number(ess.finishedPerfumePrice) : kitConfig.basePrice;
+                const isEssPromo = isHalloweenSeasonActive() && isHalloweenPromoProduct(ess);
+                const kitBase = isEssPromo
+                  ? BLACK_WEEK_KIT_BASE_PRICE
+                  : ess.finishedPerfumePrice != null
+                  ? Number(ess.finishedPerfumePrice)
+                  : kitConfig.basePrice;
                 const displayName = formatPerfumeDisplayName(ess);
                 const insp = getInspiracionPerfumeName(ess);
 
@@ -396,7 +413,7 @@ export const PosArmaTuPerfumeModal: React.FC<PosArmaTuPerfumeModalProps> = ({
                           : 'border-slate-200 bg-white text-slate-700'
                       }`}
                     >
-                      PLUS +${kitConfig.extraShotPrice.toFixed(2)}
+                      PLUS +${effectiveExtraShotPrice.toFixed(2)}
                     </button>
                   </div>
                 </div>

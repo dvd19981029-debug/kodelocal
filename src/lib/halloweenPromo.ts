@@ -27,6 +27,9 @@ export const HALLOWEEN_PROMO_PRICE_1OZ = 3.40;
 export const HALLOWEEN_ORIGINAL_PRICE_1OZ = 3.75;
 export const HALLOWEEN_PROMO_DISCOUNT_1OZ = 0.35;
 
+export const POS_PROMO_PRICE_1OZ = 3.50;
+export const POS_PROMO_DISCOUNT_1OZ = 0.25;
+
 export const HALLOWEEN_PROMO_PRICE_HALF_OZ = 1.85;
 export const HALLOWEEN_ORIGINAL_PRICE_HALF_OZ = 1.90;
 export const HALLOWEEN_PROMO_DISCOUNT_HALF_OZ = 0.05;
@@ -297,6 +300,13 @@ export function resolveDteItemDiscount(item: {
   // 2. Detección automática para compras de promoción ($3.40 o $3.30 la onza -> orig $3.75; $1.85 media onza -> orig $1.90)
   const descLower = String(item.descripcion || '').toLowerCase();
   const isHalf = !descLower.includes('litro') && (descLower.includes('½') || descLower.includes('media onza') || descLower.includes('1/2'));
+
+  if (!isHalf && Math.abs(paidUnit - 3.50) < 0.005) {
+    return {
+      originalUnitPriceConIva: 3.75,
+      unitDiscountConIva: 0.25,
+    };
+  }
 
   if (!isHalf && Math.abs(paidUnit - 3.40) < 0.005) {
     return {

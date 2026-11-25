@@ -5,8 +5,10 @@ import { verifyStaffRequest } from '@/lib/customerAuthToken';
 import {
   HALLOWEEN_POTIONS,
   HALLOWEEN_PROMO_PRICE_1OZ,
+  POS_PROMO_PRICE_1OZ,
   HALLOWEEN_PROMO_PRICE_HALF_OZ,
   HALLOWEEN_PROMO_DISCOUNT_1OZ,
+  POS_PROMO_DISCOUNT_1OZ,
   HALLOWEEN_PROMO_DISCOUNT_HALF_OZ,
 } from '@/lib/halloweenPromo';
 
@@ -709,7 +711,9 @@ export async function GET(request: Request) {
       if (nameLower.includes('arma tu propio perfume') || presLower.includes('arma tu propio perfume')) return;
 
       const unitPrice = Number(it.unitPrice || 0);
-      const isPromo1Oz = Math.abs(unitPrice - HALLOWEEN_PROMO_PRICE_1OZ) < 0.01;
+      const isPromo1OzWeb = Math.abs(unitPrice - HALLOWEEN_PROMO_PRICE_1OZ) < 0.01;
+      const isPromo1OzPos = Math.abs(unitPrice - POS_PROMO_PRICE_1OZ) < 0.01;
+      const isPromo1Oz = isPromo1OzWeb || isPromo1OzPos;
       const isPromoHalfOz = Math.abs(unitPrice - HALLOWEEN_PROMO_PRICE_HALF_OZ) < 0.01;
       if (!isPromo1Oz && !isPromoHalfOz) return;
 
@@ -724,7 +728,7 @@ export async function GET(request: Request) {
         totalDescuentoHalloween += qty * HALLOWEEN_PROMO_DISCOUNT_HALF_OZ;
       } else {
         totalOnzasPromo += qty;
-        totalDescuentoHalloween += qty * HALLOWEEN_PROMO_DISCOUNT_1OZ;
+        totalDescuentoHalloween += qty * (isPromo1OzPos ? POS_PROMO_DISCOUNT_1OZ : HALLOWEEN_PROMO_DISCOUNT_1OZ);
       }
 
       const potionInfo = it.productId ? HALLOWEEN_POTIONS[it.productId] : undefined;

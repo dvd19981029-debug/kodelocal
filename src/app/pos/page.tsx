@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { INITIAL_PRODUCTS, ProductItem, CartItem, SaleRecord, PERFUME_CATEGORIES, getStoredProducts } from '@/lib/store';
 import { extractNumericSkuFromEssenceRef, isArmedPerfumeWithSticker } from '@/lib/armedPerfumeStickerInventory';
-import { isHalloweenPromoProduct, HALLOWEEN_PROMO_PRICE_1OZ, HALLOWEEN_PROMO_PRICE_HALF_OZ } from '@/lib/halloweenPromo';
+import { isHalloweenPromoProduct, isHalloweenSeasonActive, POS_PROMO_PRICE_1OZ } from '@/lib/halloweenPromo';
 import { consolidateCustomerDiscounts, hasCustomerDiscountFields, isFixedPriceEssence } from '@/lib/customerDiscounts';
 import CotizacionModal, { type CotizacionNotices } from '@/components/pos/CotizacionModal';
 import CotizacionesHistoryModal from '@/components/pos/CotizacionesHistoryModal';
@@ -1009,8 +1009,10 @@ export default function PosPage() {
   }, [selectedCustomerObj, customers, clienteEmail, clienteNrc, clienteDoc, domicilioPhone]);
 
   const activeEssencePrice = activeCustomer?.specialEssencePrice 
-    ? Number(activeCustomer.specialEssencePrice) 
-    : (sampleEssence?.price ?? 3.75);
+    ? (isHalloweenSeasonActive()
+        ? Math.min(POS_PROMO_PRICE_1OZ, Number(activeCustomer.specialEssencePrice))
+        : Number(activeCustomer.specialEssencePrice))
+    : (isHalloweenSeasonActive() ? POS_PROMO_PRICE_1OZ : (sampleEssence?.price ?? 3.75));
     
   const activeEssenceHalfPrice = activeCustomer?.specialHalfEssencePrice
     ? Number(activeCustomer.specialHalfEssencePrice)
@@ -1030,22 +1032,6 @@ export default function PosPage() {
     const isEssence = cat === "Esencias para Perfume" || cat === "Esencias & Fragancias" || (!cat && item.product.unit === 'Onza');
     const isBottle = !isEssence && (cat === "Botes" || cat === "Botes & Envases" || cat === "Envases & Botes" || item.product.name.toLowerCase().startsWith('bote') || item.product.name.toLowerCase().includes('frasco'));
     const isLogistics = cat === "Logística" || cat === "Logistica" || item.product.id === "ENVIO-DOM" || item.product.unit === "Servicio";
-
-    if (false && isEssence && isHalloweenPromoProduct(item.product)) {
-      if (item.presentation === "MEDIA_ONZA") {
-        const regularHalf = item.product.priceHalfOunce != null
-          ? Number(item.product.priceHalfOunce)
-          : Number((item.product.price / 2).toFixed(2));
-        const finalPrice = HALLOWEEN_PROMO_PRICE_HALF_OZ;
-        const discountAmt = Number(Math.max(0, regularHalf - finalPrice).toFixed(4));
-        return { listPrice: regularHalf, finalPrice, discountAmt };
-      } else {
-        const regularFull = Number(item.product.price);
-        const finalPrice = HALLOWEEN_PROMO_PRICE_1OZ;
-        const discountAmt = Number(Math.max(0, regularFull - finalPrice).toFixed(4));
-        return { listPrice: regularFull, finalPrice, discountAmt };
-      }
-    }
 
     // Esencias de alto costo con precio fijo protegido (no aplican descuentos de cliente)
     if (isEssence && isFixedPriceEssence(item.product)) {
@@ -1081,40 +1067,50 @@ export default function PosPage() {
     let finalPrice = listPrice;
     let discountAmt = 0;
 
-    if (hasSpecialFixedPrice) {
-      return { listPrice, finalPrice, discountAmt: 0 };
-    }
+    if (!hasSpecialFixedPrice) {
+      const activeCategoryTier = isLogistics
+        ? null
+        : isEssence
+        ? activeCustomer?.tier
+        : isBottle
+        ? activeCustomer?.bottleTier
+        : activeCustomer?.suppliesTier;
+      const activeCategoryCustomPct = isLogistics
+        ? null
+        : isEssence
+        ? activeCustomer?.customDiscountPct
+        : isBottle
+        ? activeCustomer?.bottleCustomDiscountPct
+        : activeCustomer?.suppliesCustomDiscountPct;
 
-    const activeCategoryTier = isLogistics
-      ? null
-      : isEssence
-      ? activeCustomer?.tier
-      : isBottle
-      ? activeCustomer?.bottleTier
-      : activeCustomer?.suppliesTier;
-    const activeCategoryCustomPct = isLogistics
-      ? null
-      : isEssence
-      ? activeCustomer?.customDiscountPct
-      : isBottle
-      ? activeCustomer?.bottleCustomDiscountPct
-      : activeCustomer?.suppliesCustomDiscountPct;
-
-    let appliedPct = 0;
-    if (activeCategoryTier) {
-      if (activeCategoryTier.name === 'Personalizado' && activeCategoryCustomPct) {
+      let appliedPct = 0;
+      if (activeCategoryTier) {
+        if (activeCategoryTier.name === 'Personalizado' && activeCategoryCustomPct) {
+          appliedPct = Number(activeCategoryCustomPct);
+        } else if (activeCategoryTier.discountPct) {
+          appliedPct = Number(activeCategoryTier.discountPct);
+        }
+      } else if (activeCategoryCustomPct && Number(activeCategoryCustomPct) > 0) {
         appliedPct = Number(activeCategoryCustomPct);
-      } else if (activeCategoryTier.discountPct) {
-        appliedPct = Number(activeCategoryTier.discountPct);
       }
-    } else if (activeCategoryCustomPct && Number(activeCategoryCustomPct) > 0) {
-      appliedPct = Number(activeCategoryCustomPct);
+
+      if (appliedPct > 0) {
+        discountAmt = Number((listPrice * (appliedPct / 100)).toFixed(4));
+        finalPrice = Number((listPrice - discountAmt).toFixed(2));
+      }
     }
 
-    if (appliedPct > 0) {
-      discountAmt = Number((listPrice * (appliedPct / 100)).toFixed(4));
-      finalPrice = Number((listPrice - discountAmt).toFixed(2));
+    if (isEssence && item.presentation !== "MEDIA_ONZA" && isHalloweenPromoProduct(item.product)) {
+      const regularFull = Number(item.product.price);
+      if (POS_PROMO_PRICE_1OZ < finalPrice) {
+        return {
+          listPrice: regularFull,
+          finalPrice: POS_PROMO_PRICE_1OZ,
+          discountAmt: Number(Math.max(0, regularFull - POS_PROMO_PRICE_1OZ).toFixed(4)),
+        };
+      }
     }
+
     return { listPrice, finalPrice, discountAmt };
   };
 
