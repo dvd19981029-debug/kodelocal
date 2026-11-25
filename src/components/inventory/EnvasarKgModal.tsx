@@ -203,7 +203,11 @@ export default function EnvasarKgModal({
         throw new Error(data.error || 'No se pudo procesar el envasado');
       }
 
-      onSuccess(data.product, data.summary);
+      try {
+        onSuccess(data.product, data.summary);
+      } catch (cbErr) {
+        console.error('Error en callback onSuccess de EnvasarKgModal:', cbErr);
+      }
       onClose();
     } catch (err: any) {
       setErrorMsg(err.message || 'Error de conexión al guardar el envasado');

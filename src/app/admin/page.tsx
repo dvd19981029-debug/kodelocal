@@ -140,6 +140,11 @@ export default function AdminPage() {
 
   // Modales
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
   const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -3727,6 +3732,12 @@ export default function AdminPage() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-[70] bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 text-xs sm:text-sm font-bold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3">
+          <span>{toastMessage}</span>
         </div>
       )}
 
