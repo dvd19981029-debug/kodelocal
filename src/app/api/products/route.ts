@@ -16,7 +16,8 @@ function syncEssenceCatalogAndPushToGitHub(product: {
   gender?: string | null;
 }) {
   try {
-    const labelsDir = '/Users/luis/.gemini/antigravity/scratch/sistema-etiquetas-esencias';
+    const homeDir = process.env.HOME || '/Users/david';
+    const labelsDir = `${homeDir}/.gemini/antigravity/scratch/sistema-etiquetas-esencias`;
     const labelsCatalogPath = `${labelsDir}/apaesa_catalog.json`;
     const labelsHtmlPath = `${labelsDir}/index.html`;
 
@@ -76,7 +77,7 @@ function syncEssenceCatalogAndPushToGitHub(product: {
 
     // Subir automáticamente a GitHub en segundo plano para mantener sincronizadas todas las máquinas
     const safeSku = String(product.sku || cleanName).replace(/[^a-zA-Z0-9_-]/g, '');
-    const kodelocalDir = '/Users/luis/.gemini/antigravity/scratch/kodelocal';
+    const kodelocalDir = `${homeDir}/.gemini/antigravity/scratch/kodelocal`;
     exec(
       `git -C "${labelsDir}" add apaesa_catalog.json index.html && git -C "${labelsDir}" commit -m "Auto-sync catálogo etiquetas SKU ${safeSku}" && git -C "${labelsDir}" push origin main`,
       (err) => {

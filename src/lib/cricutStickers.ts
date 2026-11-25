@@ -2943,6 +2943,33 @@ export const CRICUT_STICKERS_CATALOG: CricutStickerCatalogEntry[] = [
       "Notas amaderadas",
       "Almizcle"
     ]
+  },
+  {
+    "sku": "120",
+    "contratipo": "ENGLAND LADY",
+    "nombre": "360 Mujer",
+    "genero": "F",
+    "marca": "Perry Ellis",
+    "anio": "1992",
+    "familia": "Floral Acuática",
+    "fraseOlfativa": "Melón fresco, lirio y flor de loto sobre almizcle blanco y sándalo.",
+    "topNotes": [
+      "Lirio",
+      "Melón",
+      "Mandarina",
+      "Rosa"
+    ],
+    "heartNotes": [
+      "Lavanda",
+      "Lirio de los valles",
+      "Flor de loto"
+    ],
+    "baseNotes": [
+      "Almizcle",
+      "Sándalo",
+      "Ámbar",
+      "Vainilla"
+    ]
   }
 ];
 

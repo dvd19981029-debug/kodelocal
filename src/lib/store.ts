@@ -3570,6 +3570,28 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stockHalf": 0
   },
   {
+    "id": "esencia-apae-120",
+    "sku": "120",
+    "barcode": "741001000120",
+    "name": "360 F",
+    "officialName": "England Lady F",
+    "brand": "Perry Ellis",
+    "gender": "Dama",
+    "category": "Esencias para Perfume",
+    "unit": "Onza",
+    "price": 3.75,
+    "priceHalfOunce": 1.9,
+    "finishedPerfumePrice": 10,
+    "cost": 1.99,
+    "stock": 0,
+    "minStock": 15,
+    "imageUrl": "/images/essence_bottle_blank.webp",
+    "description": "Inspirado en 360° de Perry Ellis",
+    "isAvailableOnline": true,
+    "puesto": "",
+    "stockHalf": 0
+  },
+  {
     "id": "ENVIO-DOM",
     "sku": "ENVIO-DOM",
     "barcode": "741009000001",

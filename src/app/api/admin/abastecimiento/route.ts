@@ -128,6 +128,7 @@ const DEFAULT_APAESA_CATALOG: SupplierCatalogEntry[] = [
   { sku: '109', id_proveedor: 'KHA1kg', name: 'KHAMRAH', contratipo: 'SULTÁN ELIXIR', price_per_kg: 71.68 },
   { sku: '110', id_proveedor: 'AO1kg', name: 'AMBER OUD', contratipo: 'GOLDEN OUD', price_per_kg: 69.91 },
   { sku: '111', id_proveedor: 'BR540E1kg', name: 'BACCARAT ROUGE 540 EXTRAIT', contratipo: 'CRISTAL ROUGE EXTRAIT', price_per_kg: 67.37 },
+  { sku: '120', id_proveedor: '360F1kg', name: '360 F', contratipo: 'ENGLAND LADY', price_per_kg: 71.68 },
 ];
 
 function checkStaffAuth(request: Request): boolean {

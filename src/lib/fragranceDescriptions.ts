@@ -125,7 +125,8 @@ export const CATALOG_DESCRIPTIONS_48: Record<string, string> = {
   '116': 'Luminosidad cristalina y sensualidad floral pura. Yuzu vibrante, granada jugosa y un acorde helado abren paso a un bouquet delicado de peonía, magnolia y flor de loto sobre una base envolvente de almizcle blanco, caoba y ámbar.',
   '117': 'Un sueño cremoso, dulce y reconfortante en las nubes. Lavanda suave, pera jugosa y bergamota iluminan un corazón adictivo de crema batida de coco, praliné y orquídea de vainilla sobre almizcles sensuales y maderas cremosas.',
   '118': 'Ternura floral radiante con elegancia parisina. Un destello frutal de membrillo y pomelo fresco envuelve un corazón luminoso de jacinto y jazmín absoluto, sellado con una caricia suave de almizcle blanco, iris, cedro y ámbar.',
-  '119': 'Un jardín paradisíaco exorbitante y refrescante. Notas acuáticas, menta fresca y jengibre despiertan un corazón exótico de agua de coco salada e higo verde cremoso sobre una base sensual de sándalo y haba tonka.'
+  '119': 'Un jardín paradisíaco exorbitante y refrescante. Notas acuáticas, menta fresca y jengibre despiertan un corazón exótico de agua de coco salada e higo verde cremoso sobre una base sensual de sándalo y haba tonka.',
+  '120': 'Frescura floral acuática radiante y atemporal. Melón jugoso, mandarina brillante, lirio y pétalos de rosa abren paso a un corazón limpio de lavanda, lirio de los valles, flor de loto y salvia sobre una base suave de almizcle blanco, sándalo, ámbar, vetiver y vainilla.'
 };
 
 /**

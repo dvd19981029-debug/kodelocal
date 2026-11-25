@@ -1200,6 +1200,16 @@ export const CATALOG_PROFILES_48: Record<string, StaticProfile> = {
     occasion: 'Días soleados, vacaciones, salidas casuales y frescura tropical',
     intensity: 'Intensa'
   },
+  '120': {
+    family: 'Floral Acuática',
+    accords: ['floral', 'acuático', 'aromático', 'floral blanco', 'afrutado', 'amaderado', 'fresco'],
+    topNotes: ['Lirio', 'Melón', 'Osmanto', 'Rosa', 'Mandarina'],
+    heartNotes: ['Lavanda', 'Lirio de los valles', 'Salvia', 'Flor de loto'],
+    baseNotes: ['Almizcle', 'Sándalo', 'Ámbar', 'Vetiver', 'Vainilla'],
+    season: 'Primavera / Verano / Todo el año',
+    occasion: 'Uso diario fresco, oficina, salidas de día y elegancia limpia',
+    intensity: 'Moderada a Intensa'
+  },
   'APAE-2154': {
     family: 'Floral Frutal',
     accords: ['floral', 'afrutado', 'fresco', 'dulce', 'acuático'],
