@@ -2172,16 +2172,16 @@ export default function ProductDetailPage() {
                       <span>Recomendaciones de Uso y Dosificación</span>
                     </h4>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      El <strong>Dipropilenglicol (DPG)</strong> es un solvente, cosolvente y humectante 100% inodoro que retarda la evaporación de las notas volátiles y mejora la fijación en piel sin alterar el perfil olfativo. Para un perfume de <strong>100 ml</strong>, se recomienda añadir entre <strong>2% y 5% (2 ml a 5 ml)</strong> junto con la esencia y el alcohol perfumero, mezclando hasta obtener una solución transparente y libre de partículas.
+                      El <strong>Dipropilenglicol (DPG)</strong> es un solvente, cosolvente y humectante 100% inodoro que retarda la evaporación de las notas volátiles y mejora la fijación en piel sin alterar el perfil olfativo. Para preparar tu perfume, <strong>agrega de 5 a 10 gotas como máximo</strong> junto con la esencia y el alcohol perfumero, mezclando suavemente hasta obtener una solución transparente y libre de partículas.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                       <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100/80 text-[11px] font-bold text-indigo-950 flex items-center gap-2">
                         <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                        <span>100% Inodoro: no altera la fragancia</span>
+                        <span>Dosis recomendada: 5 a 10 gotas máximo</span>
                       </div>
                       <div className="p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100/80 text-[11px] font-bold text-emerald-950 flex items-center gap-2">
                         <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>Aumenta fijación y suavidad en piel</span>
+                        <span>100% Inodoro: aumenta fijación sin alterar aroma</span>
                       </div>
                     </div>
                   </div>
@@ -2247,12 +2247,12 @@ export default function ProductDetailPage() {
                       <span>Recomendaciones de Uso y Dosificación</span>
                     </h4>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      El <strong>Galaxolide 50% en DEP</strong> (<em>1,3,4,6,7,8-hexametilciclopenta(g)-2-benzopiran</em>) es un fijador almizclado limpio, dulce y floral que redondea la fórmula y prolonga notablemente la duración de las notas de fondo. Para un perfume de <strong>100 ml</strong>, se recomienda dosificar entre <strong>1% y 3% (1 ml a 3 ml / ~20 a 60 gotas)</strong> directamente en la mezcla de esencia y alcohol.
+                      El <strong>Galaxolide 50% en DEP</strong> (<em>1,3,4,6,7,8-hexametilciclopenta(g)-2-benzopiran</em>) es un fijador almizclado limpio, dulce y floral que redondea la fórmula y prolonga notablemente la duración de las notas de fondo. Para preparar tu perfume, <strong>agrega de 5 a 10 gotas como máximo</strong> directamente en la mezcla de esencia y alcohol.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                       <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100/80 text-[11px] font-bold text-indigo-950 flex items-center gap-2">
                         <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                        <span>Norma IFRA: Sin alérgenos ni restrictos</span>
+                        <span>Dosis recomendada: 5 a 10 gotas máximo</span>
                       </div>
                       <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-100/80 text-[11px] font-bold text-amber-950 flex items-center gap-2">
                         <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />

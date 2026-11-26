@@ -2004,7 +2004,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stock": 30,
     "minStock": 10,
     "imageUrl": "/images/insumos/dipropilenglicol_20ml.jpg",
-    "description": "MP-191 Dipropilenglicol (DPG) • Solvente y cosolvente inodoro para dilución y fijación de fragancias",
+    "description": "MP-191 Dipropilenglicol (DPG) • Fijador y humectante inodoro (Agregar de 5 a 10 gotas como máximo)",
     "isAvailableOnline": true,
     "puesto": "C2",
     "stockHalf": 0
@@ -2024,7 +2024,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     "stock": 30,
     "minStock": 10,
     "imageUrl": "/images/insumos/galaxolide_50_dep_20ml.jpg",
-    "description": "Galaxolide 50% en DEP • Fijador almizclado y potenciador de estela para perfumería fina",
+    "description": "Galaxolide 50% en DEP • Fijador almizclado y potenciador de estela (Agregar de 5 a 10 gotas como máximo)",
     "isAvailableOnline": true,
     "puesto": "C2",
     "stockHalf": 0
